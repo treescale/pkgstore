@@ -4,6 +4,8 @@ import (
 	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
+	"io"
+	"log"
 )
 
 func (s *Service) DownloadPackage(c *gin.Context) {
@@ -20,7 +22,12 @@ func (s *Service) DownloadPackage(c *gin.Context) {
 		return
 	}
 
-	defer fileData.Close()
+	defer func(fileData io.ReadCloser) {
+		err := fileData.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(fileData)
 
 	c.DataFromReader(200, int64(versionInfo.Size), "application/octet-stream", fileData, map[string]string{
 		"Content-Disposition": "attachment; filename=" + filename,

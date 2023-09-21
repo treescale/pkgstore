@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"io"
+	"log"
 )
 
 type S3Backend struct {
@@ -90,7 +91,12 @@ func (s *S3Backend) GetMetadata(key string, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer obj.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(obj.Body)
 	metadataBuffer, err := json.Marshal(obj.Metadata)
 	if err != nil {
 		return err

@@ -31,5 +31,8 @@ func main() {
 	// NPM
 	router.NPMRoutes(r, storageBackend)
 
-	r.Run(config.Get().ListenAddress) // listen and serve on
+	err := r.Run(config.Get().ListenAddress)
+	if err != nil {
+		panic(err)
+	}
 }
