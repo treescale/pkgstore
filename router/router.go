@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/alin-io/pkgproxy/services"
 	"github.com/alin-io/pkgproxy/services/npm"
+	"github.com/alin-io/pkgproxy/services/pypi"
 	"github.com/alin-io/pkgproxy/storage"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -10,8 +11,9 @@ import (
 
 func NPMRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	npmService := npm.NewService(storageBackend)
-	r.GET("/*path", HandleFetch(npmService))
-	r.PUT("/*path", HandleUpload(npmService))
+	pypiService := pypi.NewService(storageBackend)
+	r.GET("/*path", HandleFetch(npmService, pypiService))
+	r.PUT("/*path", HandleUpload(npmService, pypiService))
 }
 
 func HandleUpload(routeServices ...services.PackageService) gin.HandlerFunc {
