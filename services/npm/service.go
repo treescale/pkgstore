@@ -1,28 +1,47 @@
 package npm
 
 import (
-	"fmt"
+	"github.com/alin-io/pkgproxy/services"
 	"github.com/alin-io/pkgproxy/storage"
-	"strings"
+	"github.com/gin-gonic/gin"
+	"regexp"
 )
 
 type Service struct {
-	storage storage.BaseStorageBackend
+	services.BasePackageService
 }
 
 func NewService(storage storage.BaseStorageBackend) *Service {
 	return &Service{
-		storage: storage,
+		BasePackageService: services.BasePackageService{Prefix: "npm", Storage: storage},
 	}
 }
 
-func (s *Service) PackageFilename(digest string) string {
-	return fmt.Sprintf("npm/%s.tgz", digest)
+func (s *Service) PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filename string) {
+	pkgPath := c.Param("path")
+
+	// /:pkgName/-/:filename
+	// /@orgname/pkgName/-/:filename
+	pattern := `^/(?P<pkgName>(@[^/]+/)?[^/]+)(?:/-/)(?P<filename>[^/]+)$`
+	re := regexp.MustCompile(pattern)
+
+	matches := re.FindStringSubmatch(pkgPath)
+	if matches == nil {
+		return "", ""
+	}
+
+	for i, name := range re.SubexpNames() {
+		if name == "pkgName" {
+			pkgName = matches[i]
+		} else if name == "filename" {
+			filename = matches[i]
+		}
+	}
+
+	return pkgName, filename
 }
 
-func (s *Service) PkgVersionFromFilename(filename string) (pkgName string, version string) {
-	filenameSplit := strings.Split(filename, "-")
-	pkgName = filenameSplit[0]
-	version = strings.Replace(filenameSplit[1], ".tgz", "", 1)
-	return pkgName, version
+func (s *Service) ShouldHandleRequest(c *gin.Context) bool {
+	pkgName, filename := s.PkgInfoFromRequestPath(c)
+	return pkgName != "" || filename != ""
 }

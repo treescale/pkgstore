@@ -12,7 +12,7 @@ type MetadataResponse struct {
 	Versions map[string]models.PackageVersionMetadata `json:"versions"`
 }
 
-func (s *Service) FetchMetadata(c *gin.Context) {
+func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := c.Param("pkgName")
 	pkg := models.Package{}
 	versions := make([]models.PackageVersion, 0)

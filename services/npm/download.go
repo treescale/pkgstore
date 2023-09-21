@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func (s *Service) DownloadPackage(c *gin.Context) {
+func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
 	pkgName, version := s.PkgVersionFromFilename(filename)
 	pkg := models.Package{}
@@ -16,7 +16,7 @@ func (s *Service) DownloadPackage(c *gin.Context) {
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versionInfo, "package_id = ? AND version = ?", pkg.Id, version)
 
-	fileData, err := s.storage.GetFile(s.PackageFilename(versionInfo.Digest))
+	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest))
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return
