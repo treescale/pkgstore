@@ -32,12 +32,12 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	c.Data(200, "text/html; charset=utf-8", []byte(fmt.Sprintf(`<!DOCTYPE html>
 <html>
   <head>
-    <title>Links for my.pypi.package</title>
+    <title>Links for %[1]s</title>
   </head>
   <body>
-    <h1>Links for my.pypi.package</h1>
-    %s
+    <h1>Links for %[1]s</h1>
+    %[2]s
   </body>
 </html>
-`, versionLinks)))
+`, pkgName, versionLinks)))
 }
