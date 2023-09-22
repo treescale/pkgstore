@@ -14,6 +14,7 @@ func NPMRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	pypiService := pypi.NewService(storageBackend)
 	r.GET("/*path", HandleFetch(npmService, pypiService))
 	r.PUT("/*path", HandleUpload(npmService, pypiService))
+	r.POST("/*path", HandleUpload(npmService, pypiService))
 }
 
 func HandleUpload(routeServices ...services.PackageService) gin.HandlerFunc {

@@ -6,7 +6,6 @@ import (
 	"github.com/alin-io/pkgproxy/middlewares"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/alin-io/pkgproxy/router"
-	"github.com/alin-io/pkgproxy/services"
 	"github.com/alin-io/pkgproxy/storage"
 	"github.com/gin-gonic/gin"
 )
@@ -16,9 +15,6 @@ func main() {
 
 	r.Use(gin.Logger())
 	r.Use(middlewares.AuthMiddleware)
-
-	// Route Services
-	r.GET("/", services.HealthCheckHandler)
 
 	var storageBackend storage.BaseStorageBackend
 	if config.Get().Storage.ActiveBackend == config.StorageS3 {

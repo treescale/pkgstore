@@ -17,7 +17,7 @@ const (
 
 func init() {
 	projectConfig.ListenAddress = getEnv("LISTEN_ADDRESS")
-	projectConfig.ListenAddress = getEnv("REGISTRY_HOST", "http://localhost:8080")
+	projectConfig.RegistryHost = getEnv("REGISTRY_HOST", "http://localhost:8080")
 	projectConfig.DatabaseUrl = getEnv("DATABASE_URL")
 
 	// Storage Backend
