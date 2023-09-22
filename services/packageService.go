@@ -1,9 +1,12 @@
 package services
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/alin-io/pkgproxy/storage"
 	"github.com/gin-gonic/gin"
+	"io"
 	"strings"
 )
 
@@ -34,4 +37,16 @@ func (s *BasePackageService) PkgVersionFromFilename(filename string) (pkgName st
 	pkgName = filenameSplit[0]
 	version = strings.Replace(filenameSplit[1], ".tgz", "", 1)
 	return pkgName, version
+}
+
+func (s *BasePackageService) ChecksumReader(r io.Reader) (checksum string, size int64, err error) {
+	h := sha256.New()
+	if size, err = io.Copy(h, r); err != nil {
+		return "", 0, err
+	}
+	return hex.EncodeToString(h.Sum(nil)), size, nil
+}
+
+func (s *BasePackageService) ShouldHandleRequest(c *gin.Context) bool {
+	return c.GetString("pkgType") == s.Prefix
 }

@@ -39,4 +39,8 @@ type PackageVersionMetadata struct {
 	Keywords      []string          `json:"keywords"`
 	License       string            `json:"license"`
 	Main          string            `json:"main"`
+
+	// Python Metadata
+	RequiresPython  string `json:"requires_python"`
+	FilenamePostfix string `json:"filename_postfix"`
 }

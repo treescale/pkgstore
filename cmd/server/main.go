@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/alin-io/pkgproxy/config"
 	_ "github.com/alin-io/pkgproxy/db"
+	"github.com/alin-io/pkgproxy/middlewares"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/alin-io/pkgproxy/router"
 	"github.com/alin-io/pkgproxy/services"
@@ -13,7 +14,8 @@ import (
 func main() {
 	r := gin.Default()
 
-	r.Use(gin.ErrorLogger())
+	r.Use(gin.Logger())
+	r.Use(middlewares.AuthMiddleware)
 
 	// Route Services
 	r.GET("/", services.HealthCheckHandler)

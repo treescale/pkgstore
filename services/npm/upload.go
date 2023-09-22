@@ -2,9 +2,7 @@ package npm
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/base64"
-	"encoding/hex"
 	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
@@ -48,9 +46,11 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		break
 	}
 
-	hasher := sha1.New()
-	hasher.Write(decodedBytes)
-	checksum := hex.EncodeToString(hasher.Sum(nil))
+	checksum, _, err := s.ChecksumReader(bytes.NewReader(decodedBytes))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		return
+	}
 
 	currentVersion := ""
 	var pkgVersion models.PackageVersion
@@ -81,8 +81,9 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	db.DB().Create(&models.Package{
 		Name:      requestBody.Name,
+		Service:   s.Prefix,
 		Namespace: "",
-		AuthId:    "",
+		AuthId:    c.GetString("token"),
 		Versions:  []models.PackageVersion{pkgVersion},
 	})
 	c.JSON(200, requestBody)

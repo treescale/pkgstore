@@ -1,9 +1,9 @@
 package pypi
 
 import (
+	"fmt"
 	"github.com/alin-io/pkgproxy/services"
 	"github.com/alin-io/pkgproxy/storage"
-	"github.com/gin-gonic/gin"
 )
 
 type Service struct {
@@ -16,7 +16,6 @@ func NewService(storage storage.BaseStorageBackend) *Service {
 	}
 }
 
-func (s *Service) ShouldHandleRequest(c *gin.Context) bool {
-	pkgPath := c.Param("path")
-	return len(pkgPath) == 0 && len(c.PostForm("name")) > 0 && len(c.PostForm("version")) > 0
+func (s *Service) constructPackageOriginalFilename(name, version, postfix string) string {
+	return fmt.Sprintf("%s-%s-%s", name, version, postfix)
 }

@@ -40,8 +40,3 @@ func (s *Service) PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filena
 
 	return pkgName, filename
 }
-
-func (s *Service) ShouldHandleRequest(c *gin.Context) bool {
-	pkgName, filename := s.PkgInfoFromRequestPath(c)
-	return pkgName != "" || filename != ""
-}
