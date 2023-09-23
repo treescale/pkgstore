@@ -73,7 +73,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		break
 	}
 
-	err = s.Storage.WriteFile(s.PackageFilename(checksum), nil, bytes.NewReader(decodedBytes))
+	err = s.Storage.WriteFile(s.PackageFilename(checksum, ""), nil, bytes.NewReader(decodedBytes))
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
 		return

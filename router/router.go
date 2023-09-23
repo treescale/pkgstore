@@ -34,6 +34,9 @@ func HandleFetch(routeServices ...services.PackageService) gin.HandlerFunc {
 		for _, service := range routeServices {
 			if service.ShouldHandleRequest(c) {
 				packageName, fileName := service.PkgInfoFromRequestPath(c)
+				c.Set("pkgName", packageName)
+				c.Set("filename", fileName)
+
 				if len(fileName) > 0 && len(packageName) > 0 {
 					service.DownloadHandler(c)
 				} else {

@@ -11,7 +11,7 @@ import (
 )
 
 type PackageService interface {
-	PackageFilename(digest string) string
+	PackageFilename(digest, postfix string) string
 	PkgVersionFromFilename(filename string) (pkgName string, version string)
 	ShouldHandleRequest(c *gin.Context) bool
 	PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filename string)
@@ -28,8 +28,11 @@ type BasePackageService struct {
 	Storage storage.BaseStorageBackend
 }
 
-func (s *BasePackageService) PackageFilename(digest string) string {
-	return fmt.Sprintf("%s/%s.tgz", s.Prefix, digest)
+func (s *BasePackageService) PackageFilename(digest, postfix string) string {
+	if len(postfix) == 0 {
+		postfix = ".tar.gz"
+	}
+	return fmt.Sprintf("%s/%s%s", s.Prefix, digest, postfix)
 }
 
 func (s *BasePackageService) PkgVersionFromFilename(filename string) (pkgName string, version string) {

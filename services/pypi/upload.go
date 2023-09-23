@@ -1,14 +1,13 @@
 package pypi
 
 import (
-	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/datatypes"
 	"io"
 	"log"
 	"mime/multipart"
-	"strings"
+	"slices"
 )
 
 func (s *Service) UploadHandler(c *gin.Context) {
@@ -42,31 +41,64 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
 		return
 	}
-	filenamePostfix := strings.Replace(file.Filename, s.constructPackageOriginalFilename(pkgName, pkgVersionName, ""), "", 1)
-	storageFilename := s.PypiPackageFilename(checksum, filenamePostfix)
-	err = s.Storage.WriteFile(storageFilename, nil, fileHandle)
+	filenamePostfix := s.FilenamePostfix(file.Filename, pkgName, pkgVersionName)
+	storageFilename := s.PackageFilename(checksum, filenamePostfix)
 
-	pkgVersion := models.PackageVersion[pypiPackageMetadata]{
-		Digest:  checksum,
-		Version: pkgVersionName,
-		Size:    uint64(size),
-		Metadata: datatypes.NewJSONType(pypiPackageMetadata{
-			RequiresPython:  c.PostForm("requires_python"),
-			FilenamePostfix: filenamePostfix,
-		}),
+	packageModel := models.Package[pypiPackageMetadata]{}
+	pkgVersion := models.PackageVersion[pypiPackageMetadata]{}
+	_ = packageModel.FillByName(pkgName)
+	if packageModel.Id > 0 {
+		pkgVersion, err = packageModel.Version(pkgVersionName)
+		if err != nil {
+			log.Println("Unable to fill package versions: ", err)
+			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+			return
+		}
 	}
 
-	err = db.DB().Create(&models.Package[pypiPackageMetadata]{
-		Name:      pkgName,
-		Service:   s.Prefix,
-		Namespace: "",
-		AuthId:    c.GetString("token"),
-		Versions: []models.PackageVersion[pypiPackageMetadata]{
-			pkgVersion,
-		},
-	}).Error
+	err = s.Storage.WriteFile(storageFilename, nil, fileHandle)
+
+	if packageModel.Id > 0 && len(pkgVersion.Digest) > 0 {
+		if slices.Contains(pkgVersion.Metadata.Data().OriginalFiles, file.Filename) {
+			c.JSON(200, pkgVersion)
+			return
+		} else {
+			versionMeta := pkgVersion.Metadata.Data()
+			versionMeta.OriginalFiles = append(versionMeta.OriginalFiles, file.Filename)
+			pkgVersion.Metadata = datatypes.NewJSONType(versionMeta)
+			err = pkgVersion.SaveMeta()
+			if err != nil {
+				log.Println("Unable to update package version metadata: ", err)
+			}
+		}
+	} else {
+		pkgVersion = models.PackageVersion[pypiPackageMetadata]{
+			Digest:  checksum,
+			Version: pkgVersionName,
+			Size:    uint64(size),
+			Metadata: datatypes.NewJSONType(pypiPackageMetadata{
+				RequiresPython: c.PostForm("requires_python"),
+				OriginalFiles:  []string{file.Filename},
+			}),
+		}
+
+		packageModel = models.Package[pypiPackageMetadata]{
+			Name:      pkgName,
+			Service:   s.Prefix,
+			Namespace: "",
+			AuthId:    c.GetString("token"),
+			Versions: []models.PackageVersion[pypiPackageMetadata]{
+				pkgVersion,
+			},
+		}
+
+		err = packageModel.Insert()
+		if err != nil {
+			log.Println("Unable to create package in DB: ", err)
+		}
+	}
+
 	if err != nil {
-		log.Println("Unable to create package in DB: ", err)
 		err = s.Storage.DeleteFile(storageFilename)
 		if err != nil {
 			log.Println("Unable to Delete/Rollback package upload: ", err)

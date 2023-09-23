@@ -1,4 +1,4 @@
-package npm
+package pypi
 
 import (
 	"github.com/alin-io/pkgproxy/db"
@@ -11,12 +11,12 @@ import (
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.GetString("filename")
 	pkgName, version := s.PkgVersionFromFilename(filename)
-	pkg := models.Package[npmPackageMetadata]{}
-	versionInfo := models.PackageVersion[npmPackageMetadata]{}
+	pkg := models.Package[pypiPackageMetadata]{}
+	versionInfo := models.PackageVersion[pypiPackageMetadata]{}
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versionInfo, "package_id = ? AND version = ?", pkg.Id, version)
 
-	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest, ""))
+	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest, s.FilenamePostfix(filename, pkgName, version)))
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return

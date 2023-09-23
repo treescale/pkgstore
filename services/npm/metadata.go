@@ -13,7 +13,7 @@ type MetadataResponse struct {
 }
 
 func (s *Service) MetadataHandler(c *gin.Context) {
-	pkgName := c.Param("pkgName")
+	pkgName := c.GetString("pkgName")
 	pkg := models.Package[npmPackageMetadata]{}
 	versions := make([]models.PackageVersion[npmPackageMetadata], 0)
 	db.DB().Find(&pkg, "name = ?", pkgName)
