@@ -7,18 +7,18 @@ import (
 )
 
 type MetadataResponse struct {
-	Name     string                                   `json:"name"`
-	DistTags map[string]string                        `json:"dist-tags"`
-	Versions map[string]models.PackageVersionMetadata `json:"versions"`
+	Name     string                        `json:"name"`
+	DistTags map[string]string             `json:"dist-tags"`
+	Versions map[string]npmPackageMetadata `json:"versions"`
 }
 
 func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := c.Param("pkgName")
-	pkg := models.Package{}
-	versions := make([]models.PackageVersion, 0)
+	pkg := models.Package[npmPackageMetadata]{}
+	versions := make([]models.PackageVersion[npmPackageMetadata], 0)
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versions, "package_id = ?", pkg.Id)
-	result := MetadataResponse{Name: pkgName, DistTags: make(map[string]string), Versions: make(map[string]models.PackageVersionMetadata)}
+	result := MetadataResponse{Name: pkgName, DistTags: make(map[string]string), Versions: make(map[string]npmPackageMetadata)}
 
 	for _, version := range versions {
 		result.Versions[version.Version] = version.Metadata.Data()

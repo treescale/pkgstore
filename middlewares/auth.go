@@ -19,13 +19,13 @@ func AuthMiddleware(c *gin.Context) {
 	tokenSplit := strings.Split(tokenString, ":")
 	username := ""
 	token := ""
-	isBasicAuth := false
 	if len(tokenSplit) == 2 {
 		username = tokenSplit[0]
 		token = tokenSplit[1]
 	} else if len(tokenSplit) == 1 {
 		token = tokenSplit[0]
 	} else {
+		isBasicAuth := false
 		username, token, isBasicAuth = c.Request.BasicAuth()
 		if !isBasicAuth {
 			c.AbortWithStatus(401)

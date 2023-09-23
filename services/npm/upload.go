@@ -15,12 +15,12 @@ type npmUploadRequestBody struct {
 		Data        string `json:"data"`
 		Length      int    `json:"length"`
 	} `json:"_attachments"`
-	Id          string                                   `json:"_id"`
-	Description string                                   `json:"description"`
-	Name        string                                   `json:"name"`
-	Readme      string                                   `json:"readme"`
-	DistTags    map[string]string                        `json:"dist-tags"`
-	Versions    map[string]models.PackageVersionMetadata `json:"versions"`
+	Id          string                        `json:"_id"`
+	Description string                        `json:"description"`
+	Name        string                        `json:"name"`
+	Readme      string                        `json:"readme"`
+	DistTags    map[string]string             `json:"dist-tags"`
+	Versions    map[string]npmPackageMetadata `json:"versions"`
 }
 
 func (s *Service) UploadHandler(c *gin.Context) {
@@ -53,14 +53,14 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 
 	currentVersion := ""
-	var pkgVersion models.PackageVersion
+	var pkgVersion models.PackageVersion[npmPackageMetadata]
 	for _, versionInfo := range requestBody.Versions {
 		currentVersion = versionInfo.Version
 
-		pkgVersion = models.PackageVersion{
+		pkgVersion = models.PackageVersion[npmPackageMetadata]{
 			Version:  currentVersion,
 			Digest:   checksum,
-			Metadata: datatypes.NewJSONType(versionInfo),
+			Metadata: datatypes.NewJSONType[npmPackageMetadata](versionInfo),
 			Size:     uint64(len(decodedBytes)),
 		}
 
@@ -79,12 +79,12 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		return
 	}
 
-	db.DB().Create(&models.Package{
+	db.DB().Create(&models.Package[npmPackageMetadata]{
 		Name:      requestBody.Name,
 		Service:   s.Prefix,
 		Namespace: "",
 		AuthId:    c.GetString("token"),
-		Versions:  []models.PackageVersion{pkgVersion},
+		Versions:  []models.PackageVersion[npmPackageMetadata]{pkgVersion},
 	})
 	c.JSON(200, requestBody)
 }

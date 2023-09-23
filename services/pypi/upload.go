@@ -42,26 +42,37 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
 		return
 	}
-	err = s.Storage.WriteFile(s.PackageFilename(checksum), nil, fileHandle)
+	filenamePostfix := strings.Replace(file.Filename, s.constructPackageOriginalFilename(pkgName, pkgVersionName, ""), "", 1)
+	storageFilename := s.PypiPackageFilename(checksum, filenamePostfix)
+	err = s.Storage.WriteFile(storageFilename, nil, fileHandle)
 
-	pkgVersion := models.PackageVersion{
+	pkgVersion := models.PackageVersion[pypiPackageMetadata]{
 		Digest:  checksum,
 		Version: pkgVersionName,
 		Size:    uint64(size),
-		Metadata: datatypes.NewJSONType(models.PackageVersionMetadata{
+		Metadata: datatypes.NewJSONType(pypiPackageMetadata{
 			RequiresPython:  c.PostForm("requires_python"),
-			FilenamePostfix: strings.Replace(file.Filename, s.constructPackageOriginalFilename(pkgName, pkgVersionName, ""), "", 1),
+			FilenamePostfix: filenamePostfix,
 		}),
 	}
 
-	db.DB().Create(&models.Package{
+	err = db.DB().Create(&models.Package[pypiPackageMetadata]{
 		Name:      pkgName,
 		Service:   s.Prefix,
 		Namespace: "",
 		AuthId:    c.GetString("token"),
-		Versions: []models.PackageVersion{
+		Versions: []models.PackageVersion[pypiPackageMetadata]{
 			pkgVersion,
 		},
-	})
+	}).Error
+	if err != nil {
+		log.Println("Unable to create package in DB: ", err)
+		err = s.Storage.DeleteFile(storageFilename)
+		if err != nil {
+			log.Println("Unable to Delete/Rollback package upload: ", err)
+		}
+		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		return
+	}
 	c.JSON(200, pkgVersion)
 }

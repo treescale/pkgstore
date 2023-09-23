@@ -11,8 +11,8 @@ import (
 
 func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := strings.Replace(c.Param("path"), "simple/", "", 1)
-	pkg := models.Package{}
-	versions := make([]models.PackageVersion, 0)
+	pkg := models.Package[pypiPackageMetadata]{}
+	versions := make([]models.PackageVersion[pypiPackageMetadata], 0)
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versions, "package_id = ?", pkg.Id)
 	versionLinks := ""

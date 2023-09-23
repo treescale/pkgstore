@@ -29,7 +29,7 @@ type BasePackageService struct {
 }
 
 func (s *BasePackageService) PackageFilename(digest string) string {
-	return fmt.Sprintf("%s/%s.tgs", s.Prefix, digest)
+	return fmt.Sprintf("%s/%s.tgz", s.Prefix, digest)
 }
 
 func (s *BasePackageService) PkgVersionFromFilename(filename string) (pkgName string, version string) {

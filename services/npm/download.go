@@ -11,8 +11,8 @@ import (
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
 	pkgName, version := s.PkgVersionFromFilename(filename)
-	pkg := models.Package{}
-	versionInfo := models.PackageVersion{}
+	pkg := models.Package[npmPackageMetadata]{}
+	versionInfo := models.PackageVersion[npmPackageMetadata]{}
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versionInfo, "package_id = ? AND version = ?", pkg.Id, version)
 
