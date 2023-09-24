@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/alin-io/pkgproxy/middlewares"
 	"github.com/alin-io/pkgproxy/services"
 	"github.com/alin-io/pkgproxy/services/npm"
 	"github.com/alin-io/pkgproxy/services/pypi"
@@ -9,7 +10,19 @@ import (
 	"net/http"
 )
 
-func NPMRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
+func SetupGinServer(storageBackend storage.BaseStorageBackend) *gin.Engine {
+	r := gin.Default()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	PackageRouter(r, storageBackend)
+
+	return r
+}
+
+func PackageRouter(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
+	r.Use(middlewares.AuthMiddleware)
+
 	npmService := npm.NewService(storageBackend)
 	pypiService := pypi.NewService(storageBackend)
 	r.GET("/*path", HandleFetch(npmService, pypiService))
