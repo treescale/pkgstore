@@ -16,9 +16,9 @@ const (
 )
 
 func init() {
-	projectConfig.ListenAddress = getEnv("LISTEN_ADDRESS")
+	projectConfig.ListenAddress = getEnv("LISTEN_ADDRESS", ":8080")
 	projectConfig.RegistryHost = getEnv("REGISTRY_HOST", "http://localhost:8080")
-	projectConfig.DatabaseUrl = getEnv("DATABASE_URL")
+	projectConfig.DatabaseUrl = getEnv("DATABASE_URL", "file::memory:?cache=shared")
 
 	// Storage Backend
 	projectConfig.Storage.ActiveBackend = getEnv("STORAGE_BACKEND", StorageS3)

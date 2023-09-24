@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alin-io/pkgproxy/config"
+	"github.com/alin-io/pkgproxy/db"
 	_ "github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/alin-io/pkgproxy/router"
@@ -15,6 +16,9 @@ func main() {
 	} else {
 		panic("Unknown storage backend")
 	}
+
+	// Initialize the DB connection
+	db.InitDatabase()
 
 	// Sync Models with the DB
 	models.SyncModels()
