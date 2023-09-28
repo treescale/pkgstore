@@ -9,7 +9,7 @@ import (
 
 func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := c.GetString("pkgName")
-	pkg := models.Package[pypiPackageMetadata]{}
+	pkg := models.Package[PypiPackageMetadata]{}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
@@ -22,7 +22,7 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 		return
 	}
 
-	if pkg.Id < 1 || len(pkg.Versions) == 0 {
+	if !c.GetBool("testing") && (pkg.Id < 1 || len(pkg.Versions) == 0) {
 		s.ProxyToPublicRegistry(c)
 		return
 	}
@@ -39,6 +39,11 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 				versionData.Metadata.Data().RequiresPython,
 			)
 		}
+	}
+
+	if pkg.Id < 1 || len(pkg.Versions) == 0 {
+		c.JSON(404, gin.H{"error": "Package not found"})
+		return
 	}
 
 	c.Data(200, "text/html; charset=utf-8", []byte(fmt.Sprintf(`<!DOCTYPE html>

@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgproxy/db"
-	"github.com/alin-io/pkgproxy/models"
 	"github.com/alin-io/pkgproxy/services/npm"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +34,7 @@ func TestNpmPackageUpload(t *testing.T) {
 	assert.Equal(t, "0.0.1", versionInfo.DistTags["latest"])
 	assert.Equal(t, pkgName, versionInfo.Versions["0.0.1"].Name)
 
-	err = DeleteTestNpmPackage(pkgName)
+	err = DeleteTestPackage(pkgName, "npm")
 	assert.Nil(t, err)
 }
 
@@ -56,12 +54,14 @@ func TestNpmPackageMetadata(t *testing.T) {
 
 		assert.Equal(t, 200, w.Code)
 
+		w.Flush()
+
 		w = httptest.NewRecorder()
 		req, _ = http.NewRequest("GET", "/npm/"+pkgName, nil)
 		serverApp.ServeHTTP(w, req)
 
 		assert.Equal(t, 200, w.Code)
-		err := DeleteTestNpmPackage(pkgName)
+		err := DeleteTestPackage(pkgName, "npm")
 		assert.Nil(t, err)
 	})
 }
@@ -76,6 +76,8 @@ func TestNpmPackageDownload(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &versionInfo)
 	assert.Nil(t, err)
 
+	w.Flush()
+
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", fmt.Sprintf("/npm/%[1]s/-/%[1]s-%[2]s.tar.gz", pkgName, version), nil)
 	serverApp.ServeHTTP(w, req)
@@ -85,7 +87,7 @@ func TestNpmPackageDownload(t *testing.T) {
 	assert.Contains(t, w.Header().Get("Content-Disposition"), fmt.Sprintf("%[1]s-%[2]s.tar.gz", pkgName, version))
 	assert.Equal(t, "354", w.Header().Get("Content-Length"))
 
-	err = DeleteTestNpmPackage(pkgName)
+	err = DeleteTestPackage(pkgName, "npm")
 	assert.Nil(t, err)
 }
 
@@ -94,26 +96,6 @@ func UploadTestNpmPackage(name, version string) (*httptest.ResponseRecorder, *ht
 	req, _ := http.NewRequest("PUT", "/npm/"+name, NpmPackageDataReader(name, version))
 	req.Header.Set("Content-Type", "application/json")
 	return w, req
-}
-
-func DeleteTestNpmPackage(name string) error {
-	service := npm.Service{}
-	pkg := models.Package[npm.MetadataResponse]{}
-	err := pkg.FillByName(name, "npm")
-	if err != nil {
-		return err
-	}
-	err = pkg.FillVersions()
-	if err != nil {
-		return err
-	}
-	for _, version := range pkg.Versions {
-		err = storageBackend.DeleteFile(service.PackageFilename(version.Digest, ""))
-		if err != nil {
-			return err
-		}
-	}
-	return db.DB().Delete(&models.Package[npm.MetadataResponse]{}, "name = ? AND service = ?", name, "npm").Error
 }
 
 func NpmPackageDataReader(name, version string) *bytes.Buffer {

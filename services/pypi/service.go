@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type pypiPackageMetadata struct {
+type PypiPackageMetadata struct {
 	RequiresPython string   `json:"requires_python"`
 	OriginalFiles  []string `json:"original_files"`
 }
@@ -40,18 +40,11 @@ func (s *Service) FilenamePostfix(filename, pkgName, pkgVersionName string) (pos
 	return strings.Replace(filename, s.constructPackageOriginalFilename(pkgName, pkgVersionName, ""), "", 1)
 }
 
-func (s *Service) PkgVersionFromFilename(filename string) (pkgName string, version string) {
-	filenameSplit := strings.Split(filename, "-")
-	pkgName = filenameSplit[0]
-	version = strings.Replace(filenameSplit[1], ".tar.gz", "", 1)
-	return pkgName, version
-}
-
 func (s *Service) PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filename string) {
 	pkgPath := c.Param("path")
 
 	// /:pkgName/
-	pattern := `^/(files/)?([a-z0-9]{64}/)?(?P<pkgName>[^/]+)(?:/)?$`
+	pattern := `^/(files/|simple/)?([a-z0-9]{64}/)?(?P<pkgName>[^/]+)(?:/)?$`
 	re := regexp.MustCompile(pattern)
 
 	matches := re.FindStringSubmatch(pkgPath)

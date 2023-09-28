@@ -4,6 +4,7 @@ import (
 	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/alin-io/pkgproxy/router"
+	"github.com/alin-io/pkgproxy/services/npm"
 	"github.com/alin-io/pkgproxy/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -36,4 +37,8 @@ func TestServerHealthCheck(t *testing.T) {
 
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), "ok")
+}
+
+func DeleteTestPackage(name, service string) error {
+	return db.DB().Delete(&models.Package[npm.MetadataResponse]{}, "name = ? AND service = ?", name, service).Error
 }

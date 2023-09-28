@@ -18,9 +18,19 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
+	if pkg.Id == 0 {
+		c.JSON(404, gin.H{"error": "Not Found"})
+		return
+	}
+
 	versionInfo, err = pkg.Version(version)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	if len(versionInfo.Digest) == 0 {
+		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}
 
