@@ -6,9 +6,6 @@ import (
 	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
 )
 
 func (s *Service) MetadataHandler(c *gin.Context) {
@@ -18,7 +15,7 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versions, "package_id = ?", pkg.Id)
 	if pkg.Id < 1 || len(versions) == 0 {
-		s.ProxyToPypi(c)
+		s.ProxyToPublicRegistry(c)
 		return
 	}
 
@@ -47,27 +44,4 @@ func (s *Service) MetadataHandler(c *gin.Context) {
   </body>
 </html>
 `, pkgName, versionLinks)))
-}
-
-func (s *Service) ProxyToPypi(c *gin.Context) {
-	urlPath := "/simple" + c.Param("path")
-	remote, err := url.Parse("https://pypi.org" + urlPath)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
-
-	proxy := httputil.NewSingleHostReverseProxy(remote)
-	proxy.Director = func(req *http.Request) {
-		req.Header = c.Request.Header
-
-		// Remove Authorization header
-		req.Header.Del("Authorization")
-
-		req.Host = remote.Host
-		req.URL.Scheme = remote.Scheme
-		req.URL.Host = remote.Host
-		req.URL.Path = urlPath
-	}
-
-	proxy.ServeHTTP(c.Writer, c.Request)
 }

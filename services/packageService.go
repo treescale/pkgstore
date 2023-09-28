@@ -7,6 +7,9 @@ import (
 	"github.com/alin-io/pkgproxy/storage"
 	"github.com/gin-gonic/gin"
 	"io"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strings"
 )
 
@@ -26,6 +29,9 @@ type BasePackageService struct {
 
 	Prefix  string
 	Storage storage.BaseStorageBackend
+
+	PublicRegistryUrl        string
+	PublicRegistryPathPrefix string
 }
 
 func (s *BasePackageService) PackageFilename(digest, postfix string) string {
@@ -52,4 +58,27 @@ func (s *BasePackageService) ChecksumReader(r io.Reader) (checksum string, size 
 
 func (s *BasePackageService) ShouldHandleRequest(c *gin.Context) bool {
 	return c.GetString("pkgType") == s.Prefix
+}
+
+func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {
+	urlPath := s.PublicRegistryUrl + c.Param("path")
+	remote, err := url.Parse(s.PublicRegistryPathPrefix + urlPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Director = func(req *http.Request) {
+		req.Header = c.Request.Header
+
+		// Remove Authorization header
+		req.Header.Del("Authorization")
+
+		req.Host = remote.Host
+		req.URL.Scheme = remote.Scheme
+		req.URL.Host = remote.Host
+		req.URL.Path = urlPath
+	}
+
+	proxy.ServeHTTP(c.Writer, c.Request)
 }

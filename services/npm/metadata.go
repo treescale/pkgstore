@@ -18,6 +18,10 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	versions := make([]models.PackageVersion[npmPackageMetadata], 0)
 	db.DB().Find(&pkg, "name = ?", pkgName)
 	db.DB().Find(&versions, "package_id = ?", pkg.Id)
+	if pkg.Id < 1 || len(versions) == 0 {
+		s.ProxyToPublicRegistry(c)
+		return
+	}
 	result := MetadataResponse{Name: pkgName, DistTags: make(map[string]string), Versions: make(map[string]npmPackageMetadata)}
 
 	for _, version := range versions {

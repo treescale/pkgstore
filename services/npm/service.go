@@ -34,7 +34,12 @@ type npmPackageMetadata struct {
 
 func NewService(storage storage.BaseStorageBackend) *Service {
 	return &Service{
-		BasePackageService: services.BasePackageService{Prefix: "npm", Storage: storage},
+		BasePackageService: services.BasePackageService{
+			Prefix:                   "npm",
+			Storage:                  storage,
+			PublicRegistryPathPrefix: "",
+			PublicRegistryUrl:        "https://registry.npmjs.org",
+		},
 	}
 }
 

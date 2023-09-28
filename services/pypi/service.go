@@ -20,7 +20,12 @@ type Service struct {
 
 func NewService(storage storage.BaseStorageBackend) *Service {
 	return &Service{
-		BasePackageService: services.BasePackageService{Prefix: "pypi", Storage: storage},
+		BasePackageService: services.BasePackageService{
+			Prefix:                   "pypi",
+			Storage:                  storage,
+			PublicRegistryPathPrefix: "/simple/",
+			PublicRegistryUrl:        "https://pypi.org",
+		},
 	}
 }
 
