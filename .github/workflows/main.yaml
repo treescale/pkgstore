@@ -19,4 +19,4 @@ jobs:
 
       - name: Build and test
         run: |
-          make test -C cmd
+          go test -v ./cmd
