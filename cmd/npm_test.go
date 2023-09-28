@@ -16,32 +16,28 @@ import (
 )
 
 func TestNpmAuthentication(t *testing.T) {
-	t.Run("should fail with 401 if username is given but there is no token", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/npm/some-package-name", nil)
-		req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("some-username:")))
-		serverApp.ServeHTTP(w, req)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/npm/some-package-name", nil)
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("some-username:")))
+	serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 401, w.Code)
-	})
+	assert.Equal(t, 401, w.Code)
 }
 
 func TestNpmPackageUpload(t *testing.T) {
-	t.Run("should upload package without errors", func(t *testing.T) {
-		pkgName := uuid.NewString()
-		w, req := UploadTestNpmPackage(pkgName, "0.0.1")
-		serverApp.ServeHTTP(w, req)
+	pkgName := uuid.NewString()
+	w, req := UploadTestNpmPackage(pkgName, "0.0.1")
+	serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code)
-		versionInfo := npm.MetadataResponse{}
-		err := json.Unmarshal(w.Body.Bytes(), &versionInfo)
-		assert.Nil(t, err)
-		assert.Equal(t, "0.0.1", versionInfo.DistTags["latest"])
-		assert.Equal(t, pkgName, versionInfo.Versions["0.0.1"].Name)
+	assert.Equal(t, 200, w.Code)
+	versionInfo := npm.MetadataResponse{}
+	err := json.Unmarshal(w.Body.Bytes(), &versionInfo)
+	assert.Nil(t, err)
+	assert.Equal(t, "0.0.1", versionInfo.DistTags["latest"])
+	assert.Equal(t, pkgName, versionInfo.Versions["0.0.1"].Name)
 
-		err = DeleteTestNpmPackage(pkgName)
-		assert.Nil(t, err)
-	})
+	err = DeleteTestNpmPackage(pkgName)
+	assert.Nil(t, err)
 }
 
 func TestNpmPackageMetadata(t *testing.T) {
@@ -68,6 +64,29 @@ func TestNpmPackageMetadata(t *testing.T) {
 		err := DeleteTestNpmPackage(pkgName)
 		assert.Nil(t, err)
 	})
+}
+
+func TestNpmPackageDownload(t *testing.T) {
+	pkgName := uuid.NewString()
+	version := "0.0.1"
+	w, req := UploadTestNpmPackage(pkgName, version)
+	serverApp.ServeHTTP(w, req)
+	assert.Equal(t, 200, w.Code)
+	versionInfo := npm.MetadataResponse{}
+	err := json.Unmarshal(w.Body.Bytes(), &versionInfo)
+	assert.Nil(t, err)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", fmt.Sprintf("/npm/%[1]s/-/%[1]s-%[2]s.tar.gz", pkgName, version), nil)
+	serverApp.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+	assert.Contains(t, w.Header().Get("Content-Disposition"), fmt.Sprintf("%[1]s-%[2]s.tar.gz", pkgName, version))
+	assert.Equal(t, "354", w.Header().Get("Content-Length"))
+
+	err = DeleteTestNpmPackage(pkgName)
+	assert.Nil(t, err)
 }
 
 func UploadTestNpmPackage(name, version string) (*httptest.ResponseRecorder, *http.Request) {

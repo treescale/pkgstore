@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"path/filepath"
 	"strings"
 )
 
@@ -41,9 +42,16 @@ func (s *BasePackageService) PackageFilename(digest, postfix string) string {
 }
 
 func (s *BasePackageService) PkgVersionFromFilename(filename string) (pkgName string, version string) {
-	filenameSplit := strings.Split(filename, "-")
-	pkgName = filenameSplit[0]
-	version = strings.Replace(filenameSplit[1], ".tgz", "", 1)
+	base := filepath.Base(filename)
+	for _, ext := range []string{".tar.gz", ".tgz", ".whl"} {
+		if strings.HasSuffix(base, ext) {
+			base = strings.Replace(base, ext, "", 1)
+		}
+	}
+
+	filenameSplit := strings.Split(base, "-")
+	pkgName = strings.Join(filenameSplit[:len(filenameSplit)-1], "-")
+	version = filenameSplit[len(filenameSplit)-1]
 	return pkgName, version
 }
 

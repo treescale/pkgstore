@@ -43,7 +43,7 @@ func (s *Service) FilenamePostfix(filename, pkgName, pkgVersionName string) (pos
 func (s *Service) PkgVersionFromFilename(filename string) (pkgName string, version string) {
 	filenameSplit := strings.Split(filename, "-")
 	pkgName = filenameSplit[0]
-	version = strings.Replace(filenameSplit[1], ".tgz", "", 1)
+	version = strings.Replace(filenameSplit[1], ".tar.gz", "", 1)
 	return pkgName, version
 }
 
