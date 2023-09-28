@@ -1,7 +1,6 @@
 package pypi
 
 import (
-	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -13,8 +12,17 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	pkgName, version := s.PkgVersionFromFilename(filename)
 	pkg := models.Package[pypiPackageMetadata]{}
 	versionInfo := models.PackageVersion[pypiPackageMetadata]{}
-	db.DB().Find(&pkg, "name = ?", pkgName)
-	db.DB().Find(&versionInfo, "package_id = ? AND version = ?", pkg.Id, version)
+	err := pkg.FillByName(pkgName, s.Prefix)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	versionInfo, err = pkg.Version(version)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
 
 	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest, s.FilenamePostfix(filename, pkgName, version)))
 	if err != nil {

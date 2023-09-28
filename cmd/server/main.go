@@ -23,7 +23,8 @@ func main() {
 	// Sync Models with the DB
 	models.SyncModels()
 
-	r := router.SetupGinServer(storageBackend)
+	r := router.SetupGinServer()
+	router.PackageRouter(r, storageBackend)
 
 	err := r.Run(config.Get().ListenAddress)
 	if err != nil {

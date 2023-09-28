@@ -16,7 +16,6 @@ import (
 type PackageService interface {
 	PackageFilename(digest, postfix string) string
 	PkgVersionFromFilename(filename string) (pkgName string, version string)
-	ShouldHandleRequest(c *gin.Context) bool
 	PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filename string)
 
 	UploadHandler(c *gin.Context)
@@ -54,10 +53,6 @@ func (s *BasePackageService) ChecksumReader(r io.Reader) (checksum string, size 
 		return "", 0, err
 	}
 	return hex.EncodeToString(h.Sum(nil)), size, nil
-}
-
-func (s *BasePackageService) ShouldHandleRequest(c *gin.Context) bool {
-	return c.GetString("pkgType") == s.Prefix
 }
 
 func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {

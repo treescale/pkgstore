@@ -33,6 +33,11 @@ func AuthMiddleware(c *gin.Context) {
 		}
 	}
 
+	if len(username) > 0 && len(token) == 0 {
+		c.AbortWithStatus(401)
+		return
+	}
+
 	c.Set("pkgType", username)
 	c.Set("token", token)
 	c.Next()

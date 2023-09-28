@@ -46,7 +46,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	packageModel := models.Package[pypiPackageMetadata]{}
 	pkgVersion := models.PackageVersion[pypiPackageMetadata]{}
-	_ = packageModel.FillByName(pkgName)
+	_ = packageModel.FillByName(pkgName, s.Prefix)
 	if packageModel.Id > 0 {
 		pkgVersion, err = packageModel.Version(pkgVersionName)
 		if err != nil {

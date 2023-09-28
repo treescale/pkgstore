@@ -21,8 +21,8 @@ func (*Package[T]) TableName() string {
 	return "packages"
 }
 
-func (p *Package[T]) FillByName(name string) error {
-	return db.DB().Find(&p, "name = ?", name).Error
+func (p *Package[T]) FillByName(name, service string) error {
+	return db.DB().Find(&p, "name = ? AND service = ?", name, service).Error
 }
 
 func (p *Package[T]) FillVersions() error {
@@ -37,6 +37,10 @@ func (p *Package[T]) FillVersions() error {
 
 func (p *Package[T]) Version(name string) (PackageVersion[T], error) {
 	version := PackageVersion[T]{}
+	if p.Id == 0 {
+		return version, nil
+	}
+
 	err := db.DB().Find(&version, "package_id = ? AND version = ?", p.Id, name).Error
 	if err != nil {
 		return version, err
@@ -46,6 +50,18 @@ func (p *Package[T]) Version(name string) (PackageVersion[T], error) {
 
 func (p *Package[T]) Insert() error {
 	return db.DB().Create(p).Error
+}
+
+func (p *Package[T]) InsertVersion(version PackageVersion[T]) error {
+	if p.Id == 0 {
+		return nil
+	}
+	version.PackageId = p.Id
+	if p.Versions == nil {
+		p.Versions = make([]PackageVersion[T], 0)
+	}
+	p.Versions = append(p.Versions, version)
+	return db.DB().Create(&version).Error
 }
 
 func (p *Package[T]) Delete() error {

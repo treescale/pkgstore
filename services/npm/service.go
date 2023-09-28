@@ -48,7 +48,7 @@ func (s *Service) PkgInfoFromRequestPath(c *gin.Context) (pkgName string, filena
 
 	// /:pkgName/-/:filename
 	// /@orgname/pkgName/-/:filename
-	pattern := `^/(?P<pkgName>(@[^/]+/)?[^/]+)(?:/-/)(?P<filename>[^/]+)$`
+	pattern := `^/(?P<pkgName>(@[^/]+/)?[^/]+)(?:/-/)?(?P<filename>[^/]+)?$`
 	re := regexp.MustCompile(pattern)
 
 	matches := re.FindStringSubmatch(pkgPath)

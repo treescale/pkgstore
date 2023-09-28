@@ -3,10 +3,10 @@ package npm
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/datatypes"
+	"log"
 )
 
 type npmUploadRequestBody struct {
@@ -24,11 +24,6 @@ type npmUploadRequestBody struct {
 }
 
 func (s *Service) UploadHandler(c *gin.Context) {
-	token := c.Request.Header.Get("Authorization")
-	if token == "" {
-		c.JSON(401, gin.H{"error": "Unauthorized"})
-		return
-	}
 	requestBody := npmUploadRequestBody{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
@@ -54,23 +49,48 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	currentVersion := ""
 	var pkgVersion models.PackageVersion[npmPackageMetadata]
-	for _, versionInfo := range requestBody.Versions {
-		currentVersion = versionInfo.Version
 
-		pkgVersion = models.PackageVersion[npmPackageMetadata]{
-			Version:  currentVersion,
-			Digest:   checksum,
-			Metadata: datatypes.NewJSONType[npmPackageMetadata](versionInfo),
-			Size:     uint64(len(decodedBytes)),
+	pkg := models.Package[npmPackageMetadata]{}
+	err = pkg.FillByName(requestBody.Name, s.Prefix)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
+		return
+	}
+
+	if pkg.Id > 0 {
+		pkgVersion, err = pkg.Version(currentVersion)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+			return
 		}
+	} else {
+		pkg = models.Package[npmPackageMetadata]{
+			Name:      requestBody.Name,
+			Service:   s.Prefix,
+			Namespace: "",
+			AuthId:    c.GetString("token"),
+		}
+	}
 
-		for tagName, tagVersion := range requestBody.DistTags {
-			if tagVersion == versionInfo.Version {
-				pkgVersion.Tag = tagName
-				break
+	if len(pkgVersion.Digest) == 0 {
+		for _, versionInfo := range requestBody.Versions {
+			currentVersion = versionInfo.Version
+
+			pkgVersion = models.PackageVersion[npmPackageMetadata]{
+				Version:  currentVersion,
+				Digest:   checksum,
+				Metadata: datatypes.NewJSONType[npmPackageMetadata](versionInfo),
+				Size:     uint64(len(decodedBytes)),
 			}
+
+			for tagName, tagVersion := range requestBody.DistTags {
+				if tagVersion == versionInfo.Version {
+					pkgVersion.Tag = tagName
+					break
+				}
+			}
+			break
 		}
-		break
 	}
 
 	err = s.Storage.WriteFile(s.PackageFilename(checksum, ""), nil, bytes.NewReader(decodedBytes))
@@ -79,12 +99,27 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		return
 	}
 
-	db.DB().Create(&models.Package[npmPackageMetadata]{
-		Name:      requestBody.Name,
-		Service:   s.Prefix,
-		Namespace: "",
-		AuthId:    c.GetString("token"),
-		Versions:  []models.PackageVersion[npmPackageMetadata]{pkgVersion},
+	if pkg.Id == 0 {
+		pkg.Versions = []models.PackageVersion[npmPackageMetadata]{pkgVersion}
+		err = pkg.Insert()
+	} else if len(pkgVersion.Digest) == 0 {
+		err = pkg.InsertVersion(pkgVersion)
+	}
+
+	if err != nil {
+		log.Println("Unable to create package in DB: ", err)
+		err = s.Storage.DeleteFile(s.PackageFilename(checksum, ""))
+		if err != nil {
+			log.Println("Unable to delete package from storage: ", err)
+		}
+		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		return
+	}
+	c.JSON(200, MetadataResponse{
+		Name:     pkg.Name,
+		DistTags: requestBody.DistTags,
+		Versions: map[string]npmPackageMetadata{
+			pkgVersion.Version: pkgVersion.Metadata.Data(),
+		},
 	})
-	c.JSON(200, requestBody)
 }

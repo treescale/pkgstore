@@ -3,7 +3,6 @@ package pypi
 import (
 	"fmt"
 	"github.com/alin-io/pkgproxy/config"
-	"github.com/alin-io/pkgproxy/db"
 	"github.com/alin-io/pkgproxy/models"
 	"github.com/gin-gonic/gin"
 )
@@ -11,16 +10,25 @@ import (
 func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := c.GetString("pkgName")
 	pkg := models.Package[pypiPackageMetadata]{}
-	versions := make([]models.PackageVersion[pypiPackageMetadata], 0)
-	db.DB().Find(&pkg, "name = ?", pkgName)
-	db.DB().Find(&versions, "package_id = ?", pkg.Id)
-	if pkg.Id < 1 || len(versions) == 0 {
+	err := pkg.FillByName(pkgName, s.Prefix)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	err = pkg.FillVersions()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	if pkg.Id < 1 || len(pkg.Versions) == 0 {
 		s.ProxyToPublicRegistry(c)
 		return
 	}
 
 	versionLinks := ""
-	for _, versionData := range versions {
+	for _, versionData := range pkg.Versions {
 		for _, originalFilename := range versionData.Metadata.Data().OriginalFiles {
 			versionLinks = fmt.Sprintf(
 				`%[1]s<a href="%[2]s/files/%[3]s/%[4]s#sha256=%[3]s" data-requires-python="%[5]s">%[4]s</a></br>`,
