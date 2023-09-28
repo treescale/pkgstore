@@ -3,7 +3,9 @@ package db
 import (
 	"github.com/alin-io/pkgproxy/config"
 	"github.com/glebarez/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"strings"
 )
 
 var (
@@ -12,7 +14,15 @@ var (
 
 func InitDatabase() {
 	var err error
-	client, err = gorm.Open(sqlite.Open(config.Get().DatabaseUrl), &gorm.Config{})
+	var dialector gorm.Dialector
+
+	if strings.Index(config.Get().DatabaseUrl, "postgres://") == 0 {
+		dialector = postgres.Open(config.Get().DatabaseUrl)
+	} else {
+		dialector = sqlite.Open(config.Get().DatabaseUrl)
+	}
+
+	client, err = gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
