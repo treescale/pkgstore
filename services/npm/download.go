@@ -1,17 +1,18 @@
 package npm
 
 import (
-	"github.com/alin-io/pkgproxy/models"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 )
 
 func (s *Service) DownloadHandler(c *gin.Context) {
-	filename := c.GetString("filename")
-	pkgName, version := s.PkgVersionFromFilename(filename)
-	pkg := models.Package[npmPackageMetadata]{}
-	versionInfo := models.PackageVersion[npmPackageMetadata]{}
+	filename := c.Param("filename")
+	pkgName := s.ConstructFullPkgName(c)
+	_, version := s.PkgVersionFromFilename(filename)
+	pkg := models.Package[PackageMetadata]{}
+	versionInfo := models.PackageVersion[PackageMetadata]{}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
@@ -34,7 +35,18 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest, ""))
+	fileAsset, err := versionInfo.Asset()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	if fileAsset == nil || fileAsset.Id < 1 {
+		c.JSON(404, gin.H{"error": "Not Found"})
+		return
+	}
+
+	fileData, err := s.Storage.GetFile(s.PackageFilename(fileAsset.Digest))
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return
@@ -47,7 +59,7 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		}
 	}(fileData)
 
-	c.DataFromReader(200, int64(versionInfo.Size), "application/octet-stream", fileData, map[string]string{
+	c.DataFromReader(200, int64(fileAsset.Size), "application/octet-stream", fileData, map[string]string{
 		"Content-Disposition": "attachment; filename=" + filename,
 	})
 }

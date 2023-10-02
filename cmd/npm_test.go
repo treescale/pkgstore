@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgproxy/services/npm"
+	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -48,21 +48,22 @@ func TestNpmPackageMetadata(t *testing.T) {
 	})
 
 	t.Run("should respond with metadata JSON if package exists", func(t *testing.T) {
-		pkgName := uuid.NewString()
-		w, req := UploadTestNpmPackage(pkgName, "0.0.1")
-		serverApp.ServeHTTP(w, req)
+		for _, pkgName := range []string{uuid.NewString(), uuid.NewString() + "/" + uuid.NewString()} {
+			w, req := UploadTestNpmPackage(pkgName, "0.0.1")
+			serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code)
+			assert.Equal(t, 200, w.Code)
 
-		w.Flush()
+			w.Flush()
 
-		w = httptest.NewRecorder()
-		req, _ = http.NewRequest("GET", "/npm/"+pkgName, nil)
-		serverApp.ServeHTTP(w, req)
+			w = httptest.NewRecorder()
+			req, _ = http.NewRequest("GET", "/npm/"+pkgName, nil)
+			serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code)
-		err := DeleteTestPackage(pkgName, "npm")
-		assert.Nil(t, err)
+			assert.Equal(t, 200, w.Code)
+			err := DeleteTestPackage(pkgName, "npm")
+			assert.Nil(t, err)
+		}
 	})
 }
 

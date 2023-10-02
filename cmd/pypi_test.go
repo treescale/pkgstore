@@ -7,9 +7,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgproxy/config"
-	"github.com/alin-io/pkgproxy/services/npm"
-	"github.com/alin-io/pkgproxy/services/pypi"
+	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/services/npm"
+	"github.com/alin-io/pkgstore/services/pypi"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"mime/multipart"
@@ -55,21 +55,22 @@ func TestPackageMetadata(t *testing.T) {
 	})
 
 	t.Run("should respond with metadata JSON if package exists", func(t *testing.T) {
-		pkgName := uuid.NewString()
-		w, req := UploadTestPypiPackage(pkgName, "0.0.1")
-		serverApp.ServeHTTP(w, req)
+		for _, pkgName := range []string{uuid.NewString(), uuid.NewString() + "/" + uuid.NewString()} {
+			w, req := UploadTestPypiPackage(pkgName, "0.0.1")
+			serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code)
-		w.Flush()
+			assert.Equal(t, 200, w.Code)
+			w.Flush()
 
-		w = httptest.NewRecorder()
-		req, _ = http.NewRequest("GET", "/pypi/simple/"+pkgName, nil)
-		serverApp.ServeHTTP(w, req)
+			w = httptest.NewRecorder()
+			req, _ = http.NewRequest("GET", "/pypi/simple/"+pkgName, nil)
+			serverApp.ServeHTTP(w, req)
 
-		assert.Equal(t, 200, w.Code)
-		assert.Contains(t, w.Body.String(), fmt.Sprintf(`href="%s/files/`, config.Get().RegistryHost))
-		err := DeleteTestPackage(pkgName, "pypi")
-		assert.Nil(t, err)
+			assert.Equal(t, 200, w.Code)
+			assert.Contains(t, w.Body.String(), fmt.Sprintf(`href="%s/files/`, config.Get().RegistryHost))
+			err := DeleteTestPackage(pkgName, "pypi")
+			assert.Nil(t, err)
+		}
 	})
 }
 
@@ -117,7 +118,7 @@ func UploadTestPypiPackage(name, version string) (*httptest.ResponseRecorder, *h
 
 	_ = formWriter.Close()
 
-	req, _ := http.NewRequest("POST", "/pypi/"+name, bodyBuffer)
+	req, _ := http.NewRequest("POST", "/pypi", bodyBuffer)
 	req.Header.Set("Content-Type", formWriter.FormDataContentType())
 	return w, req
 }

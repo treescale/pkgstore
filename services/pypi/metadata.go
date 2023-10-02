@@ -2,13 +2,13 @@ package pypi
 
 import (
 	"fmt"
-	"github.com/alin-io/pkgproxy/config"
-	"github.com/alin-io/pkgproxy/models"
+	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 )
 
 func (s *Service) MetadataHandler(c *gin.Context) {
-	pkgName := c.GetString("pkgName")
+	pkgName := s.ConstructFullPkgName(c)
 	pkg := models.Package[PackageMetadata]{}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {

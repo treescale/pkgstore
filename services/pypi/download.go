@@ -1,14 +1,14 @@
 package pypi
 
 import (
-	"github.com/alin-io/pkgproxy/models"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 )
 
 func (s *Service) DownloadHandler(c *gin.Context) {
-	filename := c.GetString("filename")
+	filename := c.Param("filename")
 	pkgName, version := s.PkgVersionFromFilename(filename)
 	pkg := models.Package[PackageMetadata]{}
 	versionInfo := models.PackageVersion[PackageMetadata]{}
@@ -34,7 +34,18 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	fileData, err := s.Storage.GetFile(s.PackageFilename(versionInfo.Digest, s.FilenamePostfix(filename, pkgName, version)))
+	fileAsset, err := versionInfo.Asset()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		return
+	}
+
+	if fileAsset == nil || fileAsset.Id < 1 {
+		c.JSON(404, gin.H{"error": "Not Found"})
+		return
+	}
+
+	fileData, err := s.Storage.GetFile(s.PackageFilename(fileAsset.Digest))
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return
@@ -47,7 +58,7 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		}
 	}(fileData)
 
-	c.DataFromReader(200, int64(versionInfo.Size), "application/octet-stream", fileData, map[string]string{
+	c.DataFromReader(200, int64(fileAsset.Size), "application/octet-stream", fileData, map[string]string{
 		"Content-Disposition": "attachment; filename=" + filename,
 	})
 }
