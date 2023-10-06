@@ -1,10 +1,14 @@
 # About
 
+![Alin.io Package Store UI](https://i.imgur.com/UVyOgq8.png)
+
 [Alin.io](http://Alin.io) pkgstore is a simple NPM and Pypi registry server, which also acts as a proxy to the generic public registries. It is built for easy maintainability and performance.
 
 pkgstore is built with an extendable structure that allows adding more storage backends or databases to keep the package metadata information. Currently, by default, the storage backend is an AWS S3 bucket or Minio Bucket if you have a self-hosted environment.
 
 The database is a simple SQLite file, which is configurable from the environment variable of `DATABASE_URL`, and it acts as a database type selector based on the given database URL prefix, like if you have a `postgresql://...` then the database instance will act with a PostgreSQL driver. Otherwise, it will fall back to SQLite.
+
+![Alin.io Package Store UI](https://i.imgur.com/aY365Pa.png)
 
 ## Running Locally
 
