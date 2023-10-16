@@ -12,7 +12,8 @@ var (
 )
 
 const (
-	StorageS3 = "s3"
+	StorageS3         = "s3"
+	StorageFileSystem = "filesystem"
 )
 
 func init() {
@@ -29,6 +30,9 @@ func init() {
 	projectConfig.Storage.S3.ApiKey = getEnv("S3_API_KEY", "minioadmin")
 	projectConfig.Storage.S3.ApiSecret = getEnv("S3_API_SECRET", "minioadmin")
 	projectConfig.Storage.S3.ApiHost = getEnv("S3_API_HOST", "")
+
+	// File System Storage Config
+	projectConfig.Storage.FileSystemRoot = getEnv("STORAGE_BACKEND_FILESYSTEM_ROOT", "")
 }
 
 func Get() *ProjectConfigType {
@@ -40,8 +44,9 @@ type ProjectConfigType struct {
 	DatabaseUrl   string
 	RegistryHost  string
 	Storage       struct {
-		ActiveBackend string
-		S3            struct {
+		ActiveBackend  string
+		FileSystemRoot string
+		S3             struct {
 			Region    string
 			Bucket    string
 			ApiKey    string

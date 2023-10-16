@@ -21,6 +21,8 @@ func main() {
 	var storageBackend storage.BaseStorageBackend
 	if config.Get().Storage.ActiveBackend == config.StorageS3 {
 		storageBackend = storage.NewS3Backend()
+	} else if config.Get().Storage.ActiveBackend == config.StorageFileSystem {
+		storageBackend = storage.NewFileSystemBackend(config.Get().Storage.FileSystemRoot)
 	} else {
 		panic("Unknown storage backend")
 	}

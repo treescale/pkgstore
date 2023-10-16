@@ -37,7 +37,7 @@ func TestApiPackagesList(t *testing.T) {
 
 	_, _ = UploadTestContainerPackage(t, pkgName, version)
 
-	t.Run("should respond with 200 and empty list if no packages are found", func(t *testing.T) {
+	t.Run("should respond with 200 and index.html list if no packages are found", func(t *testing.T) {
 		w = httptest.NewRecorder()
 		req, _ = http.NewRequest("GET", "/api/packages", nil)
 		serverApp.ServeHTTP(w, req)
