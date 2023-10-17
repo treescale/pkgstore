@@ -53,7 +53,7 @@ func (c *ProjectConfigType) Init() {
 
 	c.RegistryHosts.Npm = GetEnv("REGISTRY_HOST_NPM", "http://localhost:8080/npm")
 	c.RegistryHosts.Pypi = GetEnv("REGISTRY_HOST_PYPI", "http://localhost:8080/pypi")
-	c.RegistryHosts.Container = GetEnv("REGISTRY_HOST_CONTAINER", "http:/host.docker.internal:8080/v2")
+	c.RegistryHosts.Container = GetEnv("REGISTRY_HOST_CONTAINER", "http://host.docker.internal:8080/v2")
 
 	c.DatabaseUrl = GetEnv("DATABASE_URL", "file::memory:?cache=shared")
 
