@@ -11,6 +11,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -50,7 +51,10 @@ func main() {
 		filepath := c.Param("filepath")
 		f, err := frontendFS.Open("ui" + filepath)
 		if f != nil {
-			f.Close()
+			e := f.Close()
+			if e != nil {
+				log.Println(e)
+			}
 		}
 
 		if err != nil || filepath == "" || filepath == "/" || filepath == "index.html" {
