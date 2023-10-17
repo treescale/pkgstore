@@ -20,22 +20,7 @@ const (
 )
 
 func init() {
-	projectConfig.ListenAddress = getEnv("LISTEN_ADDRESS", ":8080")
-	projectConfig.RegistryHost = getEnv("REGISTRY_HOST", "http://localhost:8080")
-	projectConfig.DatabaseUrl = getEnv("DATABASE_URL", "file::memory:?cache=shared")
-
-	// Storage Backend
-	projectConfig.Storage.ActiveBackend = getEnv("STORAGE_BACKEND", StorageS3)
-
-	// S3 Storage Config
-	projectConfig.Storage.S3.Region = getEnv("S3_REGION", "us-east-1")
-	projectConfig.Storage.S3.Bucket = getEnv("S3_BUCKET", "pkgstore")
-	projectConfig.Storage.S3.ApiKey = getEnv("S3_API_KEY", "minioadmin")
-	projectConfig.Storage.S3.ApiSecret = getEnv("S3_API_SECRET", "minioadmin")
-	projectConfig.Storage.S3.ApiHost = getEnv("S3_API_HOST", "")
-
-	// File System Storage Config
-	projectConfig.Storage.FileSystemRoot = getEnv("STORAGE_BACKEND_FILESYSTEM_ROOT", "")
+	projectConfig.Inti()
 }
 
 func Get() *ProjectConfigType {
@@ -59,7 +44,26 @@ type ProjectConfigType struct {
 	}
 }
 
-func getEnv(keyAndFallback ...string) string {
+func (c *ProjectConfigType) Inti() {
+	c.ListenAddress = GetEnv("LISTEN_ADDRESS", ":8080")
+	c.RegistryHost = GetEnv("REGISTRY_HOST", "http://localhost:8080")
+	c.DatabaseUrl = GetEnv("DATABASE_URL", "file::memory:?cache=shared")
+
+	// Storage Backend
+	c.Storage.ActiveBackend = GetEnv("STORAGE_BACKEND", StorageS3)
+
+	// S3 Storage Config
+	c.Storage.S3.Region = GetEnv("S3_REGION", "us-east-1")
+	c.Storage.S3.Bucket = GetEnv("S3_BUCKET", "pkgstore")
+	c.Storage.S3.ApiKey = GetEnv("S3_API_KEY", "minioadmin")
+	c.Storage.S3.ApiSecret = GetEnv("S3_API_SECRET", "minioadmin")
+	c.Storage.S3.ApiHost = GetEnv("S3_API_HOST", "")
+
+	// File System Storage Config
+	c.Storage.FileSystemRoot = GetEnv("STORAGE_BACKEND_FILESYSTEM_ROOT", "")
+}
+
+func GetEnv(keyAndFallback ...string) string {
 	key := keyAndFallback[0]
 	value := os.Getenv(key)
 	if len(value) == 0 {
