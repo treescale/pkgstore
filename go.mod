@@ -4,10 +4,12 @@ go 1.21
 
 require (
 	github.com/aws/aws-sdk-go v1.45.12
+	github.com/carlmjohnson/requests v0.23.5
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.9.0
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.3
 	gorm.io/datatypes v1.2.0
@@ -46,10 +48,10 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.4.7 // indirect

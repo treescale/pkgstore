@@ -30,6 +30,7 @@ func Get() *ProjectConfigType {
 type ProjectConfigType struct {
 	ListenAddress string
 	DatabaseUrl   string
+	AuthEndpoint  string
 	RegistryHosts struct {
 		Pypi      string
 		Npm       string
@@ -50,6 +51,7 @@ type ProjectConfigType struct {
 
 func (c *ProjectConfigType) Init() {
 	c.ListenAddress = GetEnv("LISTEN_ADDRESS", ":8080")
+	c.AuthEndpoint = GetEnv("AUTH_ENDPOINT", "")
 
 	c.RegistryHosts.Npm = GetEnv("REGISTRY_HOST_NPM", "http://localhost:8080/npm")
 	c.RegistryHosts.Pypi = GetEnv("REGISTRY_HOST_PYPI", "http://localhost:8080/pypi")
