@@ -17,10 +17,15 @@ func initNpmRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 		for i := 0; i < config.NumberOfPkgNameLevels; i++ {
 			pkgNameParam += fmt.Sprintf("/:name%d", i)
 
-			npmRoutes.GET(pkgNameParam, npmService.MetadataHandler)
-			npmRoutes.GET(pkgNameParam+"/-/:filename", npmService.DownloadHandler)
+			pkgNameRoutes := npmRoutes.Group(pkgNameParam)
+			{
+				pkgNameRoutes.Use(PkgNameAccessHandler(npmService))
 
-			npmRoutes.PUT(pkgNameParam, npmService.UploadHandler)
+				pkgNameRoutes.GET("", npmService.MetadataHandler)
+				pkgNameRoutes.GET("-/:filename", npmService.DownloadHandler)
+
+				pkgNameRoutes.PUT("", npmService.UploadHandler)
+			}
 		}
 	}
 }

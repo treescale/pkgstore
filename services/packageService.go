@@ -23,6 +23,9 @@ type PackageService interface {
 	UploadHandler(c *gin.Context)
 	DownloadHandler(c *gin.Context)
 	MetadataHandler(c *gin.Context)
+
+	SetAuthHeaderAndAbort(c *gin.Context)
+	GetPrefix() string
 }
 
 type BasePackageService struct {
@@ -69,6 +72,10 @@ func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) string {
 			pkgName = fmt.Sprintf("%s/%s", pkgName, pkgParam)
 		}
 	}
+	if len(pkgName) == 0 {
+		return ""
+	}
+
 	return pkgName[1:]
 }
 
@@ -93,4 +100,12 @@ func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {
 	}
 
 	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func (s *BasePackageService) SetAuthHeaderAndAbort(c *gin.Context) {
+	c.AbortWithStatus(401)
+}
+
+func (s *BasePackageService) GetPrefix() string {
+	return s.Prefix
 }

@@ -7,7 +7,6 @@ services:
     restart: always
     environment:
       LISTEN_ADDRESS: ":8080"
-      REGISTRY_HOST: "http://localhost:8080"
       DATABASE_URL: "packages.sqlite"
 
       S3_BUCKET: "pkgstore"

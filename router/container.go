@@ -6,33 +6,43 @@ import (
 	"github.com/alin-io/pkgstore/services/container"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 func initContainerRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	containerService := container.NewService(storageBackend)
 	containerRoutes := r.Group("/v2")
 	{
-		containerRoutes.GET("/", func(context *gin.Context) {
-			context.JSON(200, gin.H{"status": "ok"})
+		containerRoutes.GET("/", func(c *gin.Context) {
+			authToken := c.GetHeader("Authorization")
+			if len(authToken) > 0 {
+				c.JSON(200, gin.H{"token": strings.Split(authToken, " ")[1]})
+			} else {
+				containerService.SetAuthHeaderAndAbort(c)
+			}
 		})
 
 		pkgNameParam := ""
 
 		for i := 0; i < config.NumberOfPkgNameLevels; i++ {
 			pkgNameParam += fmt.Sprintf("/:name%d", i)
+			pkgNameRoutes := containerRoutes.Group(pkgNameParam)
+			{
+				pkgNameRoutes.Use(PkgNameAccessHandler(containerService))
 
-			// Upload Process
-			containerRoutes.GET(pkgNameParam+"/blobs/uploads/:uuid", containerService.GetUploadProgressHandler)
-			containerRoutes.HEAD(pkgNameParam+"/blobs/:sha256", containerService.CheckBlobExistenceHandler)
-			containerRoutes.POST(pkgNameParam+"/blobs/uploads/", containerService.StartLayerUploadHandler)
-			containerRoutes.PATCH(pkgNameParam+"/blobs/uploads/:uuid", containerService.ChunkUploadHandler)
-			containerRoutes.PUT(pkgNameParam+"/blobs/uploads/:uuid", containerService.UploadHandler)
-			containerRoutes.PUT(pkgNameParam+"/manifests/:reference", containerService.ManifestUploadHandler)
+				// Upload Process
+				pkgNameRoutes.GET("blobs/uploads/:uuid", containerService.GetUploadProgressHandler)
+				pkgNameRoutes.HEAD("blobs/:sha256", containerService.CheckBlobExistenceHandler)
+				pkgNameRoutes.POST("blobs/uploads/", containerService.StartLayerUploadHandler)
+				pkgNameRoutes.PATCH("blobs/uploads/:uuid", containerService.ChunkUploadHandler)
+				pkgNameRoutes.PUT("blobs/uploads/:uuid", containerService.UploadHandler)
+				pkgNameRoutes.PUT("manifests/:reference", containerService.ManifestUploadHandler)
 
-			// Download Process
-			containerRoutes.GET(pkgNameParam+"/manifests/:reference", containerService.MetadataHandler)
-			containerRoutes.HEAD(pkgNameParam+"/manifests/:reference", containerService.CheckMetadataHandler)
-			containerRoutes.GET(pkgNameParam+"/blobs/:sha256", containerService.DownloadHandler)
+				// Download Process
+				pkgNameRoutes.GET("manifests/:reference", containerService.MetadataHandler)
+				pkgNameRoutes.HEAD("manifests/:reference", containerService.CheckMetadataHandler)
+				pkgNameRoutes.GET("blobs/:sha256", containerService.DownloadHandler)
+			}
 		}
 	}
 }

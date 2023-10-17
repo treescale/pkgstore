@@ -22,7 +22,7 @@ func AuthMiddleware(c *gin.Context) {
 		Delete:       true,
 		PublicAccess: true,
 		Namespace:    "",
-		AuthId:       "",
+		AuthId:       "public",
 	})
 	c.Next()
 }

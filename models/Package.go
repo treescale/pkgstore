@@ -16,7 +16,8 @@ type Package[MetaType any] struct {
 	Service string    `gorm:"column:service;uniqueIndex:name_service;not null" json:"service" binding:"required"`
 
 	// AuthId is used to identify the owner of the package tied to the authentication process
-	AuthId string `gorm:"column:auth_id;index;not null" json:"auth_id" binding:"required"`
+	AuthId   string `gorm:"column:auth_id;index;not null" json:"auth_id" binding:"required"`
+	IsPublic bool   `gorm:"column:is_public;not null;default:false" json:"is_public" binding:"required"`
 
 	LatestVersion string                     `gorm:"column:latest_version" json:"latest_version"`
 	Versions      []PackageVersion[MetaType] `gorm:"foreignKey:PackageId;references:ID;constraint:OnDelete:CASCADE;" json:"versions"`

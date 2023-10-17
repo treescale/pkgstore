@@ -30,8 +30,12 @@ func Get() *ProjectConfigType {
 type ProjectConfigType struct {
 	ListenAddress string
 	DatabaseUrl   string
-	RegistryHost  string
-	Storage       struct {
+	RegistryHosts struct {
+		Pypi      string
+		Npm       string
+		Container string
+	}
+	Storage struct {
 		ActiveBackend  string
 		FileSystemRoot string
 		S3             struct {
@@ -46,7 +50,11 @@ type ProjectConfigType struct {
 
 func (c *ProjectConfigType) Init() {
 	c.ListenAddress = GetEnv("LISTEN_ADDRESS", ":8080")
-	c.RegistryHost = GetEnv("REGISTRY_HOST", "http://localhost:8080")
+
+	c.RegistryHosts.Npm = GetEnv("REGISTRY_HOST_NPM", "http://localhost:8080/npm")
+	c.RegistryHosts.Pypi = GetEnv("REGISTRY_HOST_PYPI", "http://localhost:8080/pypi")
+	c.RegistryHosts.Container = GetEnv("REGISTRY_HOST_CONTAINER", "http:/host.docker.internal:8080/v2")
+
 	c.DatabaseUrl = GetEnv("DATABASE_URL", "file::memory:?cache=shared")
 
 	// Storage Backend

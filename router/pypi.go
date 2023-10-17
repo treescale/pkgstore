@@ -12,10 +12,15 @@ func initPypiRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	pypiService := pypi.NewService(storageBackend)
 	pypiRoutes := r.Group("/pypi")
 	{
+		pypiRoutes.Use(PkgNameAccessHandler(pypiService))
+
 		pkgNameParam := ""
 		for i := 0; i < config.NumberOfPkgNameLevels; i++ {
 			pkgNameParam += fmt.Sprintf("/:name%d", i)
-			pypiRoutes.GET("/simple/"+pkgNameParam, pypiService.MetadataHandler)
+			pypiRoutes.GET(
+				"/simple/"+pkgNameParam,
+				pypiService.MetadataHandler,
+			)
 		}
 
 		pypiRoutes.GET("/files/:sha256/:filename", pypiService.DownloadHandler)

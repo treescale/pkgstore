@@ -1,9 +1,12 @@
 package container
 
 import (
+	"fmt"
+	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/services"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"net/url"
 	"regexp"
 )
 
@@ -57,6 +60,27 @@ func (s *Service) PkgInfoFromRequest(c *gin.Context) (pkgName string, filename s
 	}
 
 	return pkgName, filename
+}
+
+func (s *Service) SetAuthHeaderAndAbort(c *gin.Context) {
+	registryHost := config.Get().RegistryHosts.Container
+	registryHostUrl, err := url.Parse(registryHost)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Unable to parse registry host"})
+		c.Abort()
+		return
+	}
+	c.Header("www-authenticate", fmt.Sprintf(`Bearer realm="%[1]s/",service="%[2]s"`, registryHost, registryHostUrl.Hostname()))
+	c.JSON(401, gin.H{
+		"errors": []gin.H{
+			{
+				"code":    "UNAUTHORIZED",
+				"message": "authentication required",
+				"detail":  nil,
+			},
+		},
+	})
+	c.Abort()
 }
 
 type ManifestV1 struct {

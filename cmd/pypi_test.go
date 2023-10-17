@@ -57,7 +57,7 @@ func TestPackageMetadata(t *testing.T) {
 			serverApp.ServeHTTP(w, req)
 
 			assert.Equal(t, 200, w.Code)
-			assert.Contains(t, w.Body.String(), fmt.Sprintf(`href="%s/files/`, config.Get().RegistryHost))
+			assert.Contains(t, w.Body.String(), fmt.Sprintf(`href="%s/files/`, config.Get().RegistryHosts.Pypi))
 			err := DeleteTestPackage(pkgName, "pypi")
 			assert.Nil(t, err)
 		}

@@ -34,7 +34,7 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 			versionLinks = fmt.Sprintf(
 				`%[1]s<a href="%[2]s/files/%[3]s/%[4]s#sha256=%[3]s" data-requires-python="%[5]s">%[4]s</a></br>`,
 				versionLinks,
-				config.Get().RegistryHost,
+				config.Get().RegistryHosts.Pypi,
 				versionData.Digest,
 				originalFilename,
 				versionData.Metadata.Data().RequiresPython,
