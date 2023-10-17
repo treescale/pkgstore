@@ -101,7 +101,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		packageModel = models.Package[PackageMetadata]{
 			Name:    pkgName,
 			Service: s.Prefix,
-			AuthId:  middlewares.GetAuthId(c),
+			AuthId:  middlewares.GetAuthCtx(c).AuthId,
 			Versions: []models.PackageVersion[PackageMetadata]{
 				pkgVersion,
 			},

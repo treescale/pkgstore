@@ -241,7 +241,7 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		pkg = models.Package[PackageMetadata]{
 			Name:    pkgName,
 			Service: s.Prefix,
-			AuthId:  middlewares.GetAuthId(c),
+			AuthId:  middlewares.GetAuthCtx(c).AuthId,
 		}
 		err = pkg.Insert()
 		if err != nil {
