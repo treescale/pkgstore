@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -61,12 +62,14 @@ func (s *BasePackageService) ChecksumReader(r io.Reader) (checksum string, size 
 }
 
 func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) string {
-	pkgName := c.Param("name")
-	pkgName2 := c.Param("name2")
-	if len(pkgName2) > 0 {
-		pkgName = fmt.Sprintf("%s/%s", pkgName, pkgName2)
+	pkgName := ""
+	for i := 0; i < config.NumberOfPkgNameLevels; i++ {
+		pkgParam := c.Param(fmt.Sprintf("name%d", i))
+		if len(pkgParam) > 0 {
+			pkgName = fmt.Sprintf("%s/%s", pkgName, pkgParam)
+		}
 	}
-	return pkgName
+	return pkgName[1:]
 }
 
 func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {

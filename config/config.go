@@ -14,6 +14,9 @@ var (
 const (
 	StorageS3         = "s3"
 	StorageFileSystem = "filesystem"
+
+	// NumberOfPkgNameLevels PkgName Levels (e.g. /npm/@username/package-name)
+	NumberOfPkgNameLevels = 2
 )
 
 func init() {
