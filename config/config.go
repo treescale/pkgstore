@@ -20,7 +20,7 @@ const (
 )
 
 func init() {
-	projectConfig.Inti()
+	projectConfig.Init()
 }
 
 func Get() *ProjectConfigType {
@@ -44,7 +44,7 @@ type ProjectConfigType struct {
 	}
 }
 
-func (c *ProjectConfigType) Inti() {
+func (c *ProjectConfigType) Init() {
 	c.ListenAddress = GetEnv("LISTEN_ADDRESS", ":8080")
 	c.RegistryHost = GetEnv("REGISTRY_HOST", "http://localhost:8080")
 	c.DatabaseUrl = GetEnv("DATABASE_URL", "file::memory:?cache=shared")
