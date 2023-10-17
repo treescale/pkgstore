@@ -11,10 +11,13 @@ import (
 type Package[MetaType any] struct {
 	gorm.Model `json:"-"`
 
-	ID            uuid.UUID                  `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
-	Name          string                     `gorm:"column:name;uniqueIndex:name_service;not null" json:"name" binding:"required"`
-	Service       string                     `gorm:"column:service;uniqueIndex:name_service;not null" json:"service" binding:"required"`
-	AuthId        string                     `gorm:"column:auth_id;index;not null" json:"auth_id" binding:"required"`
+	ID      uuid.UUID `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
+	Name    string    `gorm:"column:name;uniqueIndex:name_service;not null" json:"name" binding:"required"`
+	Service string    `gorm:"column:service;uniqueIndex:name_service;not null" json:"service" binding:"required"`
+
+	// AuthId is used to identify the owner of the package tied to the authentication process
+	AuthId string `gorm:"column:auth_id;index;not null" json:"auth_id" binding:"required"`
+
 	LatestVersion string                     `gorm:"column:latest_version" json:"latest_version"`
 	Versions      []PackageVersion[MetaType] `gorm:"foreignKey:PackageId;references:ID;constraint:OnDelete:CASCADE;" json:"versions"`
 	CreatedAt     time.Time                  `gorm:"column:created_at" json:"created_at"`

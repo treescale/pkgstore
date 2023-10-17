@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -69,7 +70,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		pkg = models.Package[PackageMetadata]{
 			Name:    requestBody.Name,
 			Service: s.Prefix,
-			AuthId:  c.GetString("token"),
+			AuthId:  middlewares.GetAuthId(c),
 		}
 	}
 

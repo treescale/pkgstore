@@ -2,6 +2,7 @@ package pypi
 
 import (
 	"fmt"
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -100,7 +101,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		packageModel = models.Package[PackageMetadata]{
 			Name:    pkgName,
 			Service: s.Prefix,
-			AuthId:  c.GetString("token"),
+			AuthId:  middlewares.GetAuthId(c),
 			Versions: []models.PackageVersion[PackageMetadata]{
 				pkgVersion,
 			},
