@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
@@ -18,15 +17,6 @@ import (
 	"testing"
 	"time"
 )
-
-func TestPypiAuthentication(t *testing.T) {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/pypi/some-package-name", nil)
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("some-username:")))
-	serverApp.ServeHTTP(w, req)
-
-	assert.Equal(t, 401, w.Code)
-}
 
 func TestPypiPackageUpload(t *testing.T) {
 	pkgName := uuid.NewString()

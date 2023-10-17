@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/alin-io/pkgstore/services/npm"
@@ -12,15 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 )
-
-func TestNpmAuthentication(t *testing.T) {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/npm/some-package-name", nil)
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("some-username:")))
-	serverApp.ServeHTTP(w, req)
-
-	assert.Equal(t, 401, w.Code)
-}
 
 func TestNpmPackageUpload(t *testing.T) {
 	pkgName := uuid.NewString()

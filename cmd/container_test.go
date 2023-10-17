@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -11,15 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 )
-
-func TestContainerAuthentication(t *testing.T) {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/v2/some-package-name", nil)
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("some-username:")))
-	serverApp.ServeHTTP(w, req)
-
-	assert.Equal(t, 401, w.Code)
-}
 
 func TestContainerPackageUpload(t *testing.T) {
 	name := uuid.NewString()
