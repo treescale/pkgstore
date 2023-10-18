@@ -7,29 +7,60 @@
 pkgstore is built with an extendable structure that allows adding more storage backends or databases to keep the package metadata information. Currently, by default, the storage backend is an AWS S3 bucket or Minio Bucket if you have a self-hosted environment.
 
 The database is a simple SQLite file, which is configurable from the environment variable of `DATABASE_URL`, and it acts as a database type selector based on the given database URL prefix, like if you have a `postgresql://...` then the database instance will act with a PostgreSQL driver. Otherwise, it will fall back to SQLite.
+You can see how it's done in [`docker-compose.yaml` file](https://github.com/alin-io/pkgstore/blob/79af6bbff49be70c394277473655b7fd5618bced/docker-compose.yaml#L10-L10)
 
 ![Alin.io Package Store UI](https://i.imgur.com/aY365Pa.png)
 
-## Running Locally
+## Running Locally with Go
 
-To run locally, you will need the Minio service instance, which is configured in Docker-Compose
+This is a standard Golang Gin project and all the dependencies are inside `go.mod` and `go.sum` files. So you can run it with the following steps:
+
+#### 1. Install Go Dependencies
+
+Command below is going to download Go dependencies and put them inside `vendor` folder.
 
 ```bash
-~# docker-compose up -d minio
-~# go run ./cmd/server
+go mod download
+go mod vendor
+```
 
-[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+#### 2. Build the UI Project
 
-[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
- - using env:   export GIN_MODE=release
- - using code:  gin.SetMode(gin.ReleaseMode)
+We have a React.js based UI inside `ui` folder to list the available packages and their versions. You can build the UI project with the following command:
 
-[GIN-debug] GET    /                         --> github.com/alin-io/pkgstore/services.HealthCheckHandler (6 handlers)
-[GIN-debug] GET    /npm/*path                --> github.com/alin-io/pkgstore/router.PackageRouter.HandleFetch.func1 (6 handlers)
-[GIN-debug] GET    /pypi/*path               --> github.com/alin-io/pkgstore/router.PackageRouter.HandleFetch.func2 (6 handlers)
-[GIN-debug] PUT    /npm/*path                --> github.com/alin-io/pkgstore/services/npm.(*Service).UploadHandler-fm (6 handlers)
-[GIN-debug] POST   /pypi/*path               --> github.com/alin-io/pkgstore/services/pypi.(*Service).UploadHandler-fm (6 handlers)
-[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
-Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
-[GIN-debug] Listening and serving HTTP on :8080
+```bash
+cd ui
+npm install
+npm run build
+```
+This will build the `Vite React TypeScript` project and will copy all the bundles to the `cmd/server/ui` folder, which will then get bundled with the Go binary.
+So that at the end, we should have a single binary with the UI inside it.
+
+#### 3. Run the Project
+
+Finally, after having the UI built and Go dependencies installed, we can run the project with the following command:
+
+```bash
+go run ./cmd/server
+```
+
+OR, we can just build the final binary and run it:
+```bash
+go build -o pkgstore ./cmd/server
+
+./pkgstore
+```
+
+## Running with Docker
+
+We have a `docker-compose.yaml` file that you can use to run the project with Docker. It will run the following services:
+- `pkgstore`: The main pkgstore service
+- `minio`: A self-hosted S3 compatible storage service
+- `postgres`: A PostgreSQL database service
+
+**Note:** for Docker-Compose based configuration we are using PostgreSQL database, which makes it easier to run the project with Docker. But you can change the database URL to any other database type, like MySQL, SQLite, etc.
+
+```bash
+docker-compose build
+docker-compose up
 ```
