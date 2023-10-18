@@ -60,7 +60,7 @@ func (c *ProjectConfigType) Init() {
 	c.DatabaseUrl = GetEnv("DATABASE_URL", "file::memory:?cache=shared")
 
 	// Storage Backend
-	c.Storage.ActiveBackend = GetEnv("STORAGE_BACKEND", StorageS3)
+	c.Storage.ActiveBackend = GetEnv("STORAGE_BACKEND", StorageFileSystem)
 
 	// S3 Storage Config
 	c.Storage.S3.Region = GetEnv("S3_REGION", "us-east-1")

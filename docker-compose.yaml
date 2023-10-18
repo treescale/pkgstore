@@ -7,14 +7,15 @@ services:
     restart: always
     environment:
       LISTEN_ADDRESS: ":8080"
-      DATABASE_URL: "packages.sqlite"
-
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/pkgstore?sslmode=disable"
+      STORAGE_BACKEND: "s3"
       S3_BUCKET: "pkgstore"
       S3_API_HOST: "http://minio:9000"
       S3_API_KEY: "minioadmin"
       S3_API_SECRET: "minioadmin"
     ports:
       - "8080:8080"
+
   minio:
     image: quay.io/minio/minio:latest
     restart: always
@@ -23,3 +24,12 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
       - "127.0.0.1:9000:9000"
+
+  postgres:
+    image: postgres:alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pkgstore
+
