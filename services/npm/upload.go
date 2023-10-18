@@ -28,6 +28,7 @@ type npmUploadRequestBody struct {
 
 func (s *Service) UploadHandler(c *gin.Context) {
 	requestBody := npmUploadRequestBody{}
+	authId := middlewares.GetAuthCtx(c).AuthId
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -53,7 +54,9 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	currentVersion := ""
 	var pkgVersion models.PackageVersion[PackageMetadata]
 
-	pkg := models.Package[PackageMetadata]{}
+	pkg := models.Package[PackageMetadata]{
+		AuthId: authId,
+	}
 	err = pkg.FillByName(requestBody.Name, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
@@ -70,7 +73,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		pkg = models.Package[PackageMetadata]{
 			Name:    requestBody.Name,
 			Service: s.Prefix,
-			AuthId:  middlewares.GetAuthCtx(c).AuthId,
+			AuthId:  authId,
 		}
 	}
 
@@ -82,6 +85,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 				Version:  currentVersion,
 				Digest:   checksum,
 				Service:  s.Prefix,
+				AuthId:   authId,
 				Metadata: datatypes.NewJSONType[PackageMetadata](versionInfo),
 			}
 
@@ -109,6 +113,8 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 
 	_ = asset.Insert()
+
+	pkgVersion.Size = asset.Size
 
 	if pkg.ID == uuid.Nil {
 		pkg.Versions = []models.PackageVersion[PackageMetadata]{pkgVersion}

@@ -180,6 +180,8 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		err     error
 	)
 
+	authId := middlewares.GetAuthCtx(c).AuthId
+
 	metadataBody, _ := io.ReadAll(c.Request.Body)
 
 	hasher := sha256.New()
@@ -191,6 +193,8 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		MetadataBuffer: metadataBody,
 		Digest:         digest,
 	}
+
+	versionSize := uint64(0)
 
 	switch metadata.ContentType {
 	case ManifestV1ContentType:
@@ -206,6 +210,20 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			c.JSON(400, gin.H{"error": "Bad Request: No layers found"})
 			return
 		}
+		for _, layer := range manifest.FsLayers {
+			asset := models.Asset{}
+			layerDigest := strings.Replace(layer.BlobSum, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				return
+			}
+			if asset.Digest != layerDigest {
+				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				return
+			}
+			versionSize += asset.Size
+		}
 	case ManifestV2ContentType, ManifestOCIV1ContentType:
 		manifest := ManifestV2{}
 		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
@@ -213,12 +231,29 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
 			return
 		}
+		for _, layer := range manifest.Layers {
+			asset := models.Asset{}
+			layerDigest := strings.Replace(layer.Digest, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				return
+			}
+			if asset.Digest != layerDigest {
+				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				return
+			}
+			versionSize += asset.Size
+		}
 	case ManifestListV2ContentType, ManifestOCIIndexV1ContentType:
 		manifest := ManifestListV2{}
 		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
 		if err != nil {
 			c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
 			return
+		}
+		for _, manifestDescriptor := range manifest.Manifests {
+			versionSize += uint64(manifestDescriptor.Size)
 		}
 	default:
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -230,7 +265,9 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		return
 	}
 
-	pkg := models.Package[PackageMetadata]{}
+	pkg := models.Package[PackageMetadata]{
+		AuthId: authId,
+	}
 	err = pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
@@ -241,11 +278,13 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		pkg = models.Package[PackageMetadata]{
 			Name:    pkgName,
 			Service: s.Prefix,
-			AuthId:  middlewares.GetAuthCtx(c).AuthId,
+			AuthId:  authId,
 		}
 		err = pkg.Insert()
 		if err != nil {
 			log.Println(err)
+			c.JSON(500, gin.H{"error": "Unable to create package"})
+			return
 		}
 	}
 
@@ -257,10 +296,12 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	if pkgVersion.ID == uuid.Nil {
 		pkgVersion = models.PackageVersion[PackageMetadata]{
 			PackageId: pkg.ID,
+			AuthId:    authId,
 			Service:   s.Prefix,
 			Digest:    digest,
 			Version:   tagName,
 			Tag:       tagName,
+			Size:      versionSize,
 			Metadata:  datatypes.NewJSONType[PackageMetadata](metadata),
 		}
 		err = pkgVersion.Save()
@@ -272,12 +313,19 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		pkgVersion.Version = tagName
 		pkgVersion.Tag = tagName
 		pkgVersion.Metadata = datatypes.NewJSONType[PackageMetadata](metadata)
+		pkgVersion.Size = versionSize
 		err = pkgVersion.Save()
 	}
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to insert package version"})
 		return
+	}
+
+	pkg.LatestVersion = pkgVersion.Version
+	err = pkg.Save()
+	if err != nil {
+		log.Println(err)
 	}
 
 	c.Header("Docker-Content-Digest", "sha256:"+digest)

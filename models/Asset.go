@@ -12,8 +12,6 @@ import (
 )
 
 type Asset struct {
-	gorm.Model `json:"-"`
-
 	ID uuid.UUID `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
 
 	Digest string `gorm:"column:digest;index,not null;uniqueIndex" json:"digest" binding:"required"`

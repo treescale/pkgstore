@@ -1,3 +1,7 @@
+GET http://localhost:8080/api/stats
+
+###
+
 GET http://localhost:8080/api/packages
 
 ###

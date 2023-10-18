@@ -16,6 +16,7 @@ import (
 func (s *Service) UploadHandler(c *gin.Context) {
 	pkgName := c.PostForm("name")
 	pkgVersionName := c.PostForm("version")
+	authId := middlewares.GetAuthCtx(c).AuthId
 	file, err := c.FormFile("content")
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -46,8 +47,12 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 	storageFilename := s.PackageFilename(checksum)
 
-	packageModel := models.Package[PackageMetadata]{}
-	pkgVersion := models.PackageVersion[PackageMetadata]{}
+	packageModel := models.Package[PackageMetadata]{
+		AuthId: authId,
+	}
+	pkgVersion := models.PackageVersion[PackageMetadata]{
+		AuthId: authId,
+	}
 	_ = packageModel.FillByName(pkgName, s.Prefix)
 	if packageModel.ID != uuid.Nil {
 		pkgVersion, err = packageModel.Version(pkgVersionName)
@@ -55,6 +60,31 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			log.Println("Unable to fill package versions: ", err)
 			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
 			return
+		}
+
+		if pkgVersion.ID == uuid.Nil {
+			pkgVersion = models.PackageVersion[PackageMetadata]{
+				PackageId: packageModel.ID,
+				Service:   s.Prefix,
+				Digest:    checksum,
+				Version:   pkgVersionName,
+				Tag:       pkgVersionName,
+				AuthId:    authId,
+				Metadata: datatypes.NewJSONType(PackageMetadata{
+					RequiresPython: c.PostForm("requires_python"),
+					OriginalFiles:  []string{file.Filename},
+				}),
+			}
+
+			err = pkgVersion.Save()
+			if err != nil {
+				log.Println("Unable to Save package versions: ", err)
+				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				return
+			}
+
+			packageModel.LatestVersion = pkgVersion.Version
+			_ = packageModel.Save()
 		}
 	}
 
@@ -82,7 +112,8 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			versionMeta := pkgVersion.Metadata.Data()
 			versionMeta.OriginalFiles = append(versionMeta.OriginalFiles, file.Filename)
 			pkgVersion.Metadata = datatypes.NewJSONType(versionMeta)
-			err = pkgVersion.SaveMeta()
+			pkgVersion.Size += asset.Size
+			err = pkgVersion.Save()
 			if err != nil {
 				log.Println("Unable to update package version metadata: ", err)
 			}
@@ -92,6 +123,8 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			Service: s.Prefix,
 			Digest:  checksum,
 			Version: pkgVersionName,
+			AuthId:  authId,
+			Size:    asset.Size,
 			Metadata: datatypes.NewJSONType(PackageMetadata{
 				RequiresPython: c.PostForm("requires_python"),
 				OriginalFiles:  []string{file.Filename},
@@ -99,9 +132,10 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		}
 
 		packageModel = models.Package[PackageMetadata]{
-			Name:    pkgName,
-			Service: s.Prefix,
-			AuthId:  middlewares.GetAuthCtx(c).AuthId,
+			Name:          pkgName,
+			Service:       s.Prefix,
+			AuthId:        authId,
+			LatestVersion: pkgVersionName,
 			Versions: []models.PackageVersion[PackageMetadata]{
 				pkgVersion,
 			},

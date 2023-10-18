@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/alin-io/pkgstore/db"
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -9,9 +10,8 @@ import (
 
 func (s *Service) ListPackagesHandler(c *gin.Context) {
 	nameFilter := c.Query("q")
-
 	pkgs := make([]models.Package[any], 0)
-	err := db.DB().Model(&pkgs).Where("name LIKE ?", "%"+nameFilter+"%").Preload("Versions").Find(&pkgs).Error
+	err := db.DB().Model(&pkgs).Where("name LIKE ? AND auth_id = ?", "%"+nameFilter+"%", middlewares.GetAuthCtx(c).AuthId).Preload("Versions").Find(&pkgs).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -28,7 +28,7 @@ func (s *Service) GetPackage(c *gin.Context) {
 	}
 
 	pkg := models.Package[any]{}
-	err = db.DB().Model(&pkg).Preload("Versions").Where(`id = ?`, packageId).Find(&pkg).Error
+	err = db.DB().Model(&pkg).Preload("Versions").Where(`id = ? AND auth_id = ?`, packageId, middlewares.GetAuthCtx(c).AuthId).Find(&pkg).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -49,7 +49,7 @@ func (s *Service) DeletePackage(c *gin.Context) {
 	}
 
 	pkg := models.Package[any]{}
-	err = db.DB().Model(&pkg).Where("id = ?", packageId).Find(&pkg).Error
+	err = db.DB().Model(&pkg).Where("id = ? AND auth_id = ?", packageId, middlewares.GetAuthCtx(c).AuthId).Find(&pkg).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

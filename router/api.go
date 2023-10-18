@@ -10,6 +10,7 @@ func initApiRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	apiService := api.NewApiService(storageBackend)
 	apiRoutes := r.Group("/api")
 	{
+		apiRoutes.GET("/stats", apiService.RegistryStats)
 		apiRoutes.GET("/packages", apiService.ListPackagesHandler)
 		apiRoutes.GET("/packages/:id", apiService.GetPackage)
 		apiRoutes.GET("/packages/:id/versions", apiService.ListVersionsHandler)

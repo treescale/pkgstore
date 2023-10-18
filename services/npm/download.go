@@ -1,6 +1,7 @@
 package npm
 
 import (
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,9 +12,15 @@ import (
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
 	pkgName := s.ConstructFullPkgName(c)
+	authId := middlewares.GetAuthCtx(c).AuthId
+
 	_, version := s.PkgVersionFromFilename(filename)
-	pkg := models.Package[PackageMetadata]{}
-	versionInfo := models.PackageVersion[PackageMetadata]{}
+	pkg := models.Package[PackageMetadata]{
+		AuthId: authId,
+	}
+	versionInfo := models.PackageVersion[PackageMetadata]{
+		AuthId: authId,
+	}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
@@ -36,7 +43,7 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	fileAsset, err := versionInfo.Asset()
+	fileAsset, err := versionInfo.GetAsset()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return

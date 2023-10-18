@@ -1,6 +1,7 @@
 package npm
 
 import (
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,7 +15,10 @@ type MetadataResponse struct {
 
 func (s *Service) MetadataHandler(c *gin.Context) {
 	pkgName := s.ConstructFullPkgName(c)
-	pkg := models.Package[PackageMetadata]{}
+	authId := middlewares.GetAuthCtx(c).AuthId
+	pkg := models.Package[PackageMetadata]{
+		AuthId: authId,
+	}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})

@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/alin-io/pkgstore/config"
 	"github.com/carlmjohnson/requests"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,8 @@ type AuthResult struct {
 	Namespace    string `json:"namespace"`
 	Error        string `json:"error"`
 }
+
+const AUTH_ID_PUBLIC = "public"
 
 var (
 	// make cache with 10s TTL and 1000 max keys
@@ -49,7 +52,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	authResult := &AuthResult{
 		PublicAccess: true,
-		AuthId:       "public",
+		AuthId:       AUTH_ID_PUBLIC,
 	}
 
 	if len(tokenHeader) > 0 {
@@ -59,9 +62,9 @@ func AuthMiddleware(c *gin.Context) {
 			return
 		}
 		tokenString := tokenSplit[1]
-		decodedToken, err := base64.StdEncoding.DecodeString(tokenString)
+		decodedToken, err := decodeBase64ToUnicode(tokenString)
 		if err == nil {
-			tokenString = string(decodedToken)
+			tokenString = decodedToken
 		}
 
 		if r, ok := authCache.Get(tokenString); ok {
@@ -102,4 +105,20 @@ func getServiceFromPath(fullPath string) string {
 
 func GetAuthCtx(c *gin.Context) *AuthResult {
 	return c.MustGet("auth").(*AuthResult)
+}
+
+func decodeBase64ToUnicode(str string) (string, error) {
+	decodedBytes, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return "", err
+	}
+
+	utf8String := string(decodedBytes)
+
+	decodedUnicode := strings.ToValidUTF8(utf8String, "")
+	if utf8String != decodedUnicode {
+		return "", fmt.Errorf("the decoded string contains invalid UTF-8 characters")
+	}
+
+	return decodedUnicode, nil
 }

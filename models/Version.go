@@ -13,12 +13,12 @@ import (
 var digestRegex = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type PackageVersion[MetaType any] struct {
-	gorm.Model `json:"-"`
-
 	ID      uuid.UUID `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
 	Service string    `gorm:"column:service;not null" json:"service" binding:"required"`
+	AuthId  string    `gorm:"column:auth_id;index;not null" json:"auth_id" binding:"required"`
 
 	Digest string `gorm:"column:digest;index" json:"digest"`
+	Size   uint64 `gorm:"column:size;not null" json:"size" binding:"required"`
 
 	PackageId uuid.UUID `gorm:"column:package_id;uniqueIndex:pkg_id_version;uniqueIndex:pkg_id_tag;" json:"package_id" binding:"required"`
 
@@ -43,11 +43,11 @@ func (*PackageVersion[T]) TableName() string {
 }
 
 func (p *PackageVersion[T]) FillByName(version string) error {
-	return db.DB().Find(p, "version = ?", version).Error
+	return db.DB().Find(p, "version = ? AND auth_id = ?", version, p.AuthId).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) FillById(id uint64) error {
-	return db.DB().Find(p, "id = ?", id).Error
+	return db.DB().Find(p, "id = ? AND auth_id = ", id, p.AuthId).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) FillByDigest(digest string) error {
@@ -55,7 +55,7 @@ func (p *PackageVersion[T]) FillByDigest(digest string) error {
 	if !match {
 		return errors.New("invalid digest")
 	}
-	return db.DB().Find(p, "digest = ?", digest).Error
+	return db.DB().Find(p, "digest = ? AND auth_id = ?", digest, p.AuthId).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) Insert() error {
@@ -74,7 +74,7 @@ func (p *PackageVersion[T]) Delete() error {
 	return db.DB().Delete(&PackageVersion[T]{}, "id = ?", p.ID).Error
 }
 
-func (p *PackageVersion[T]) Asset() (*Asset, error) {
+func (p *PackageVersion[T]) GetAsset() (*Asset, error) {
 	asset := &Asset{}
 	if len(p.Digest) == 0 {
 		return nil, nil
