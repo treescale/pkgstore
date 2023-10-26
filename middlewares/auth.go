@@ -70,9 +70,14 @@ func AuthMiddleware(c *gin.Context) {
 		if r, ok := authCache.Get(tokenString); ok {
 			authResult = r
 		} else {
+			pkgAction := "pull"
+			if c.Request.Method == "PUT" || c.Request.Method == "POST" || c.Request.Method == "PATCH" {
+				pkgAction = "push"
+			}
 			err := requests.URL(config.Get().AuthEndpoint).
 				Header("Authorization", tokenString).
 				Header("X-Package-Service", requestService).
+				Header("X-Package-Action", pkgAction).
 				ToJSON(authResult).
 				ErrorJSON(&authResult).
 				Fetch(c)
