@@ -43,8 +43,13 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	requestService := getServiceFromPath(c.FullPath())
+	requestService := getServiceFromPath(c)
 	tokenHeader := c.GetHeader("Authorization")
+
+	pkgAction := "pull"
+	if c.Request.Method == "PUT" || c.Request.Method == "POST" || c.Request.Method == "PATCH" {
+		pkgAction = "push"
+	}
 
 	if len(tokenHeader) == 0 {
 		_, tokenHeader, _ = c.Request.BasicAuth()
@@ -67,13 +72,11 @@ func AuthMiddleware(c *gin.Context) {
 			tokenString = decodedToken
 		}
 
-		if r, ok := authCache.Get(tokenString); ok {
+		cacheKey := fmt.Sprintf("%s-%s-%s", tokenString, requestService, pkgAction)
+
+		if r, ok := authCache.Get(cacheKey); ok {
 			authResult = r
 		} else {
-			pkgAction := "pull"
-			if c.Request.Method == "PUT" || c.Request.Method == "POST" || c.Request.Method == "PATCH" {
-				pkgAction = "push"
-			}
 			err := requests.URL(config.Get().AuthEndpoint).
 				Header("Authorization", tokenString).
 				Header("X-Package-Service", requestService).
@@ -83,12 +86,19 @@ func AuthMiddleware(c *gin.Context) {
 				Fetch(c)
 			if err != nil || authResult.Error != "" {
 				log.Println(err)
-				c.String(401, authResult.Error)
+				c.JSON(401, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "UNAUTHORIZED",
+							"message": authResult.Error,
+						},
+					},
+				})
 				c.Abort()
 				return
 			}
 
-			authCache.Add(tokenString, authResult)
+			authCache.Add(cacheKey, authResult)
 		}
 	}
 
@@ -96,7 +106,15 @@ func AuthMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func getServiceFromPath(fullPath string) string {
+func getServiceFromPath(c *gin.Context) string {
+	fullPath := c.FullPath()
+
+	hostname := c.Request.Host
+	hostnameSplit := strings.Split(hostname, ".")
+	if len(hostnameSplit) == 3 {
+		return hostnameSplit[0]
+	}
+
 	pathSplit := strings.Split(fullPath, "/")
 	if len(pathSplit) < 2 {
 		return ""

@@ -27,7 +27,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
 # Set the working directory
-WORKDIR /root/
+WORKDIR /app
 
 # Copy binary from the build stage
 COPY --from=builder /app/server .

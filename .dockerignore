@@ -26,4 +26,6 @@ vendor/
 go.work
 .idea/
 .vscode/
+node_modules/
+.vite
 
