@@ -81,26 +81,6 @@ func getRemoteAuthContext(c *gin.Context, pkgName, token, pkgService, action str
 	return authResult, nil
 }
 
-func getServiceFromPath(c *gin.Context) string {
-	fullPath := c.FullPath()
-
-	hostname := c.Request.Host
-	hostnameSplit := strings.Split(hostname, ".")
-	if len(hostnameSplit) == 3 {
-		return hostnameSplit[0]
-	}
-
-	pathSplit := strings.Split(fullPath, "/")
-	if len(pathSplit) < 2 {
-		return ""
-	}
-	pathPrefix := pathSplit[1]
-	if pathPrefix == "v2" {
-		return "container"
-	}
-	return pathPrefix
-}
-
 func GetAuthCtx(c *gin.Context) *AuthResult {
 	return c.MustGet("auth").(*AuthResult)
 }
