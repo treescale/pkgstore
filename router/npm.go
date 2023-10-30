@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ func initNpmRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 
 			pkgNameRoutes := npmRoutes.Group(pkgNameParam)
 			{
-				pkgNameRoutes.Use(PkgNameAccessHandler(npmService))
+				pkgNameRoutes.Use(middlewares.PkgNameAccessHandler(npmService))
 
 				pkgNameRoutes.GET("", npmService.MetadataHandler)
 				pkgNameRoutes.GET("-/:filename", npmService.DownloadHandler)

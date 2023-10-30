@@ -26,6 +26,8 @@ type PackageService interface {
 
 	SetAuthHeaderAndAbort(c *gin.Context)
 	GetPrefix() string
+
+	AbortRequestWithError(c *gin.Context, status int, message string)
 }
 
 type BasePackageService struct {
@@ -108,4 +110,20 @@ func (s *BasePackageService) SetAuthHeaderAndAbort(c *gin.Context) {
 
 func (s *BasePackageService) GetPrefix() string {
 	return s.Prefix
+}
+
+func (s *BasePackageService) AbortRequestWithError(c *gin.Context, status int, message string) {
+	statusText := fmt.Sprintf("%d", status)
+	if status == 401 {
+		statusText = "UNAUTHORIZED"
+	}
+	c.JSON(status, gin.H{
+		"errors": []gin.H{
+			{
+				"code":    statusText,
+				"message": message,
+			},
+		},
+	})
+	c.Abort()
 }

@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/services/container"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func initContainerRoutes(r *gin.Engine, storageBackend storage.BaseStorageBacken
 			pkgNameParam += fmt.Sprintf("/:name%d", i)
 			pkgNameRoutes := containerRoutes.Group(pkgNameParam)
 			{
-				pkgNameRoutes.Use(PkgNameAccessHandler(containerService))
+				pkgNameRoutes.Use(middlewares.PkgNameAccessHandler(containerService))
 
 				// Upload Process
 				pkgNameRoutes.GET("blobs/uploads/:uuid", containerService.GetUploadProgressHandler)

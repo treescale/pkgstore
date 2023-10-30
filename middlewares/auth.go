@@ -7,7 +7,6 @@ import (
 	"github.com/carlmjohnson/requests"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/golang-lru/v2/expirable"
-	"log"
 	"strings"
 	"time"
 )
@@ -22,88 +21,64 @@ type AuthResult struct {
 	Error        string `json:"error"`
 }
 
-const AUTH_ID_PUBLIC = "public"
+const AuthIdPublic = "public"
 
 var (
 	// make cache with 10s TTL and 1000 max keys
 	authCache = expirable.NewLRU[string, *AuthResult](1000, nil, time.Second*10)
 )
 
-func AuthMiddleware(c *gin.Context) {
-	if len(config.Get().AuthEndpoint) == 0 {
-		c.Set("auth", &AuthResult{
-			PublicAccess: true,
-			Read:         true,
-			Write:        true,
-			Delete:       true,
-			Namespace:    "",
-			AuthId:       "public",
-		})
-		c.Next()
-		return
-	}
-
-	requestService := getServiceFromPath(c)
+func extractTokenHeader(c *gin.Context) (string, error) {
 	tokenHeader := c.GetHeader("Authorization")
-
-	pkgAction := "pull"
-	if c.Request.Method == "PUT" || c.Request.Method == "POST" || c.Request.Method == "PATCH" {
-		pkgAction = "push"
-	}
 
 	if len(tokenHeader) == 0 {
 		_, tokenHeader, _ = c.Request.BasicAuth()
 	}
 
-	authResult := &AuthResult{
-		PublicAccess: true,
-		AuthId:       AUTH_ID_PUBLIC,
+	tokenSplit := strings.Split(tokenHeader, " ")
+	tokenString := ""
+	if len(tokenSplit) == 1 {
+		tokenString = tokenSplit[0]
+	} else if len(tokenSplit) == 2 {
+		tokenString = tokenSplit[1]
+	} else {
+		return "", fmt.Errorf("invalid authorization header")
 	}
 
-	if len(tokenHeader) > 0 {
-		tokenSplit := strings.Split(tokenHeader, " ")
-		if len(tokenSplit) != 2 {
-			c.AbortWithStatus(401)
-			return
-		}
-		tokenString := tokenSplit[1]
-		decodedToken, err := decodeBase64ToUnicode(tokenString)
-		if err == nil {
-			tokenString = decodedToken
-		}
-
-		cacheKey := fmt.Sprintf("%s-%s-%s", tokenString, requestService, pkgAction)
-
-		if r, ok := authCache.Get(cacheKey); ok {
-			authResult = r
-		} else {
-			err := requests.URL(config.Get().AuthEndpoint).
-				Header("Authorization", tokenString).
-				Header("X-Package-Service", requestService).
-				Header("X-Package-Action", pkgAction).
-				ToJSON(authResult).
-				ErrorJSON(&authResult).
-				Fetch(c)
-			if err != nil || authResult.Error != "" {
-				log.Println(err)
-				c.JSON(401, gin.H{
-					"errors": []gin.H{
-						{
-							"code":    "UNAUTHORIZED",
-							"message": authResult.Error,
-						},
-					},
-				})
-				c.Abort()
-				return
-			}
-
-			authCache.Add(cacheKey, authResult)
-		}
+	decodedToken, err := decodeBase64ToUnicode(tokenString)
+	if err == nil {
+		tokenString = decodedToken
 	}
 
-	c.Set("auth", authResult)
-	c.Next()
+	return tokenString, nil
+}
+
+func getRemoteAuthContext(c *gin.Context, pkgName, token, pkgService, action string) (authResult *AuthResult, err error) {
+	cacheKey := fmt.Sprintf("%s-%s-%s-%s", token, pkgName, pkgService, action)
+
+	if r, ok := authCache.Get(cacheKey); ok {
+		authResult = r
+	} else {
+		err := requests.URL(config.Get().AuthEndpoint).
+			Header("Authorization", token).
+			Header("X-Package-Service", pkgService).
+			Header("X-Package-Name", pkgName).
+			Header("X-Package-Action", action).
+			ToJSON(authResult).
+			ErrorJSON(&authResult).
+			Fetch(c)
+		if err != nil {
+			return nil, err
+		}
+
+		if authResult.Error != "" {
+			return authResult, nil
+		}
+
+		authCache.Add(cacheKey, authResult)
+	}
+
+	return authResult, nil
 }
 
 func getServiceFromPath(c *gin.Context) string {
