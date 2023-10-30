@@ -23,33 +23,38 @@ func PkgNameAccessHandler(service services.PackageService) gin.HandlerFunc {
 
 		authResult := &AuthResult{}
 
-		if pkgAction == "pull" {
+		if len(config.Get().AuthEndpoint) > 0 {
+			tokenString, err := extractTokenHeader(c)
+			if err != nil {
+				service.AbortRequestWithError(c, 401, err.Error())
+				return
+			}
+
+			authResult, err = getRemoteAuthContext(c, pkgName, tokenString, service.GetPrefix(), pkgAction)
+			if err != nil {
+				service.AbortRequestWithError(c, 401, err.Error())
+				return
+			}
+		} else {
+			authResult.AuthId = AuthIdPublic
+		}
+
+		if len(pkgName) > 0 {
 			pkg := models.Package[any]{}
 			err := pkg.FillByName(pkgName, service.GetPrefix())
 			if err != nil {
 				service.AbortRequestWithError(c, 500, "Unable to check the DB for package version")
 				return
 			}
-			if pkg.ID != uuid.Nil && pkg.IsPublic {
-				authResult = &AuthResult{
-					PublicAccess: true,
-					AuthId:       AuthIdPublic,
-				}
-			}
-		} else if len(config.Get().AuthEndpoint) > 0 {
-			tokenString, err := extractTokenHeader(c)
-			if err != nil {
-				service.AbortRequestWithError(c, 401, err.Error())
-			}
 
-			authResult, err = getRemoteAuthContext(c, pkgName, tokenString, service.GetPrefix(), pkgAction)
-			if err != nil {
-				service.AbortRequestWithError(c, 401, err.Error())
+			if pkgAction == "pull" && pkg.ID != uuid.Nil && pkg.IsPublic {
+				authResult.PublicAccess = true
 			}
 		}
 
 		if len(authResult.AuthId) == 0 {
 			service.AbortRequestWithError(c, 401, "Unauthorized")
+			return
 		}
 
 		c.Set("auth", authResult)

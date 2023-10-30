@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/services/api"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,8 @@ func initApiRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {
 	apiService := api.NewApiService(storageBackend)
 	apiRoutes := r.Group("/api")
 	{
+		apiRoutes.Use(middlewares.PkgNameAccessHandler(apiService))
+
 		apiRoutes.GET("/stats", apiService.RegistryStats)
 		apiRoutes.GET("/packages", apiService.ListPackagesHandler)
 		apiRoutes.GET("/packages/:id", apiService.GetPackage)
