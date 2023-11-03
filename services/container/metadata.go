@@ -37,11 +37,11 @@ func (s *Service) CheckMetadataHandler(c *gin.Context) {
 }
 
 func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[PackageMetadata], pkgVersion models.PackageVersion[PackageMetadata]) {
-	authId := middlewares.GetAuthCtx(c).AuthId
-	name := s.ConstructFullPkgName(c)
+	namespace := middlewares.GetAuthCtx(c).Namespace
+	name, _ := s.ConstructFullPkgName(c)
 	tagOrDigest := c.Param("reference")
 	pkg = models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: namespace,
 	}
 	err := pkg.FillByName(name, s.Prefix)
 	if err != nil {
@@ -53,7 +53,7 @@ func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[Package
 		return
 	}
 	if strings.Contains(tagOrDigest, "sha256:") {
-		pkgVersion.AuthId = authId
+		pkgVersion.Namespace = namespace
 		err = pkgVersion.FillByDigest(strings.Replace(tagOrDigest, "sha256:", "", 1))
 	} else {
 		pkgVersion, err = pkg.Version(tagOrDigest)

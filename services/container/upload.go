@@ -17,7 +17,7 @@ import (
 
 // StartLayerUploadHandler POST /v2/<name>/blobs/uploads/
 func (s *Service) StartLayerUploadHandler(c *gin.Context) {
-	pkgName := s.ConstructFullPkgName(c)
+	pkgName, _ := s.ConstructFullPkgName(c)
 	asset := models.Asset{}
 	err := asset.StartUpload()
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Service) CheckBlobExistenceHandler(c *gin.Context) {
 }
 
 func (s *Service) GetUploadProgressHandler(c *gin.Context) {
-	pkgName := s.ConstructFullPkgName(c)
+	pkgName, _ := s.ConstructFullPkgName(c)
 	uploadUUID := c.Param("uuid")
 	asset := models.Asset{}
 	err := asset.FillByUploadUUID(uploadUUID)
@@ -75,7 +75,7 @@ func (s *Service) GetUploadProgressHandler(c *gin.Context) {
 }
 
 func (s *Service) ChunkUploadHandler(c *gin.Context) {
-	pkgName := s.ConstructFullPkgName(c)
+	pkgName, _ := s.ConstructFullPkgName(c)
 	uploadUUID := c.Param("uuid")
 	asset := models.Asset{}
 	err := asset.FillByUploadUUID(uploadUUID)
@@ -113,7 +113,7 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 }
 
 func (s *Service) UploadHandler(c *gin.Context) {
-	pkgName := s.ConstructFullPkgName(c)
+	pkgName, _ := s.ConstructFullPkgName(c)
 	inputDigest := strings.Replace(c.Query("digest"), "sha256:", "", 1)
 	uploadUUID := c.Param("uuid")
 	asset := models.Asset{}
@@ -175,12 +175,12 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	var (
-		tagName = strings.Replace(c.Param("reference"), "sha256:", "", 1)
-		pkgName = s.ConstructFullPkgName(c)
-		err     error
+		tagName    = strings.Replace(c.Param("reference"), "sha256:", "", 1)
+		pkgName, _ = s.ConstructFullPkgName(c)
+		err        error
 	)
 
-	authId := middlewares.GetAuthCtx(c).AuthId
+	authCtx := middlewares.GetAuthCtx(c)
 
 	metadataBody, _ := io.ReadAll(c.Request.Body)
 
@@ -266,7 +266,8 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	}
 
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		AuthId:    authCtx.AuthId,
+		Namespace: authCtx.Namespace,
 	}
 	err = pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
@@ -276,9 +277,10 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 
 	if pkg.ID == uuid.Nil {
 		pkg = models.Package[PackageMetadata]{
-			Name:    pkgName,
-			Service: s.Prefix,
-			AuthId:  authId,
+			Name:      pkgName,
+			Service:   s.Prefix,
+			AuthId:    authCtx.AuthId,
+			Namespace: authCtx.Namespace,
 		}
 		err = pkg.Insert()
 		if err != nil {
@@ -296,7 +298,8 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	if pkgVersion.ID == uuid.Nil {
 		pkgVersion = models.PackageVersion[PackageMetadata]{
 			PackageId: pkg.ID,
-			AuthId:    authId,
+			AuthId:    authCtx.AuthId,
+			Namespace: authCtx.Namespace,
 			Service:   s.Prefix,
 			Digest:    digest,
 			Version:   tagName,

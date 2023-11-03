@@ -28,7 +28,7 @@ type npmUploadRequestBody struct {
 
 func (s *Service) UploadHandler(c *gin.Context) {
 	requestBody := npmUploadRequestBody{}
-	authId := middlewares.GetAuthCtx(c).AuthId
+	authCtx := middlewares.GetAuthCtx(c)
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -55,7 +55,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	var pkgVersion models.PackageVersion[PackageMetadata]
 
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	err = pkg.FillByName(requestBody.Name, s.Prefix)
 	if err != nil {
@@ -71,9 +71,10 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		}
 	} else {
 		pkg = models.Package[PackageMetadata]{
-			Name:    requestBody.Name,
-			Service: s.Prefix,
-			AuthId:  authId,
+			Name:      requestBody.Name,
+			Service:   s.Prefix,
+			AuthId:    authCtx.AuthId,
+			Namespace: authCtx.Namespace,
 		}
 	}
 
@@ -82,11 +83,12 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			currentVersion = versionInfo.Version
 
 			pkgVersion = models.PackageVersion[PackageMetadata]{
-				Version:  currentVersion,
-				Digest:   checksum,
-				Service:  s.Prefix,
-				AuthId:   authId,
-				Metadata: datatypes.NewJSONType[PackageMetadata](versionInfo),
+				Version:   currentVersion,
+				Digest:    checksum,
+				Service:   s.Prefix,
+				AuthId:    authCtx.AuthId,
+				Namespace: authCtx.Namespace,
+				Metadata:  datatypes.NewJSONType[PackageMetadata](versionInfo),
 			}
 
 			for tagName, tagVersion := range requestBody.DistTags {

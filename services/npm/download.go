@@ -11,15 +11,15 @@ import (
 
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
-	pkgName := s.ConstructFullPkgName(c)
-	authId := middlewares.GetAuthCtx(c).AuthId
+	pkgName, _ := s.ConstructFullPkgName(c)
+	namespace := middlewares.GetAuthCtx(c).Namespace
 
 	_, version := s.PkgVersionFromFilename(filename)
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: namespace,
 	}
 	versionInfo := models.PackageVersion[PackageMetadata]{
-		AuthId: authId,
+		Namespace: namespace,
 	}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {

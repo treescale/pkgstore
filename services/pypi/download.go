@@ -12,12 +12,12 @@ import (
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
 	pkgName, version := s.PkgVersionFromFilename(filename)
-	authId := middlewares.GetAuthCtx(c).AuthId
+	authCtx := middlewares.GetAuthCtx(c)
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	versionInfo := models.PackageVersion[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {

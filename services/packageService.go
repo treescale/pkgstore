@@ -18,7 +18,7 @@ import (
 type PackageService interface {
 	PackageFilename(digest string) string
 	PkgVersionFromFilename(filename string) (pkgName string, version string)
-	ConstructFullPkgName(c *gin.Context) (pkgName string)
+	ConstructFullPkgName(c *gin.Context) (pkgName string, namespace string)
 
 	UploadHandler(c *gin.Context)
 	DownloadHandler(c *gin.Context)
@@ -66,7 +66,7 @@ func (s *BasePackageService) ChecksumReader(r io.Reader) (checksum string, size 
 	return hex.EncodeToString(h.Sum(nil)), size, nil
 }
 
-func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) string {
+func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) (string, string) {
 	pkgName := ""
 	for i := 0; i < config.NumberOfPkgNameLevels; i++ {
 		pkgParam := c.Param(fmt.Sprintf("name%d", i))
@@ -75,10 +75,22 @@ func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) string {
 		}
 	}
 	if len(pkgName) == 0 {
-		return ""
+		return "", ""
+	}
+	if pkgName[0] == '/' {
+		pkgName = pkgName[1:]
 	}
 
-	return pkgName[1:]
+	if pkgName[0] == '@' {
+		pkgName = pkgName[1:]
+	}
+
+	namespace := strings.Split(pkgName, "/")[0]
+	if namespace == pkgName {
+		namespace = ""
+	}
+
+	return pkgName, namespace
 }
 
 func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {

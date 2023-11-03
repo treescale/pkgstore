@@ -16,7 +16,7 @@ import (
 func (s *Service) UploadHandler(c *gin.Context) {
 	pkgName := c.PostForm("name")
 	pkgVersionName := c.PostForm("version")
-	authId := middlewares.GetAuthCtx(c).AuthId
+	authCtx := middlewares.GetAuthCtx(c)
 	file, err := c.FormFile("content")
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -48,10 +48,10 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	storageFilename := s.PackageFilename(checksum)
 
 	packageModel := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	pkgVersion := models.PackageVersion[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	_ = packageModel.FillByName(pkgName, s.Prefix)
 	if packageModel.ID != uuid.Nil {
@@ -69,7 +69,8 @@ func (s *Service) UploadHandler(c *gin.Context) {
 				Digest:    checksum,
 				Version:   pkgVersionName,
 				Tag:       pkgVersionName,
-				AuthId:    authId,
+				AuthId:    authCtx.AuthId,
+				Namespace: authCtx.Namespace,
 				Metadata: datatypes.NewJSONType(PackageMetadata{
 					RequiresPython: c.PostForm("requires_python"),
 					OriginalFiles:  []string{file.Filename},
@@ -120,11 +121,12 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		}
 	} else {
 		pkgVersion = models.PackageVersion[PackageMetadata]{
-			Service: s.Prefix,
-			Digest:  checksum,
-			Version: pkgVersionName,
-			AuthId:  authId,
-			Size:    asset.Size,
+			Service:   s.Prefix,
+			Digest:    checksum,
+			Version:   pkgVersionName,
+			AuthId:    authCtx.AuthId,
+			Namespace: authCtx.Namespace,
+			Size:      asset.Size,
 			Metadata: datatypes.NewJSONType(PackageMetadata{
 				RequiresPython: c.PostForm("requires_python"),
 				OriginalFiles:  []string{file.Filename},
@@ -134,7 +136,8 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		packageModel = models.Package[PackageMetadata]{
 			Name:          pkgName,
 			Service:       s.Prefix,
-			AuthId:        authId,
+			AuthId:        authCtx.AuthId,
+			Namespace:     authCtx.Namespace,
 			LatestVersion: pkgVersionName,
 			Versions: []models.PackageVersion[PackageMetadata]{
 				pkgVersion,

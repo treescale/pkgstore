@@ -11,12 +11,12 @@ import (
 )
 
 func (s *Service) DownloadHandler(c *gin.Context) {
-	name := s.ConstructFullPkgName(c)
+	name, _ := s.ConstructFullPkgName(c)
 	inputDigest := c.Param("sha256")
-	authId := middlewares.GetAuthCtx(c).AuthId
+	authCtx := middlewares.GetAuthCtx(c)
 	digest := strings.Replace(inputDigest, "sha256:", "", 1)
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	err := pkg.FillByName(name, s.Prefix)
 	if err != nil {

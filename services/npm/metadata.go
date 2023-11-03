@@ -14,10 +14,10 @@ type MetadataResponse struct {
 }
 
 func (s *Service) MetadataHandler(c *gin.Context) {
-	pkgName := s.ConstructFullPkgName(c)
-	authId := middlewares.GetAuthCtx(c).AuthId
+	pkgName, _ := s.ConstructFullPkgName(c)
+	authCtx := middlewares.GetAuthCtx(c)
 	pkg := models.Package[PackageMetadata]{
-		AuthId: authId,
+		Namespace: authCtx.Namespace,
 	}
 	err := pkg.FillByName(pkgName, s.Prefix)
 	if err != nil {
