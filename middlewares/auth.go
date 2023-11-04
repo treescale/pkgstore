@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
 	"github.com/carlmjohnson/requests"
@@ -55,6 +56,7 @@ func extractTokenHeader(c *gin.Context) (string, error) {
 
 func getRemoteAuthContext(c *gin.Context, pkgName, token, pkgService, action string) (authResult *AuthResult, err error) {
 	cacheKey := fmt.Sprintf("%s-%s-%s-%s", token, pkgName, pkgService, action)
+	authResult = &AuthResult{}
 
 	if r, ok := authCache.Get(cacheKey); ok {
 		authResult = r
@@ -71,8 +73,8 @@ func getRemoteAuthContext(c *gin.Context, pkgName, token, pkgService, action str
 			return nil, err
 		}
 
-		if authResult.Error != "" {
-			return authResult, nil
+		if len(authResult.Error) > 0 {
+			return authResult, errors.New(authResult.Error)
 		}
 
 		authCache.Add(cacheKey, authResult)

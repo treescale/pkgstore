@@ -32,5 +32,7 @@ WORKDIR /app
 # Copy binary from the build stage
 COPY --from=builder /app/server .
 
+ENV GIN_MODE=release
+
 # Run the application
 CMD ["./server"]

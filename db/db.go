@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/alin-io/pkgstore/config"
+	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,8 +24,13 @@ func InitDatabase() {
 		dialector = sqlite.Open(config.Get().DatabaseUrl)
 	}
 
+	loggingMode := logger.Info
+	if gin.Mode() == gin.ReleaseMode {
+		loggingMode = logger.Error
+	}
+
 	client, err = gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(loggingMode),
 	})
 	if err != nil {
 		panic(err)
