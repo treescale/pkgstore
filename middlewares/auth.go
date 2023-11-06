@@ -69,12 +69,13 @@ func getRemoteAuthContext(c *gin.Context, pkgName, token, pkgService, action str
 			ToJSON(authResult).
 			ErrorJSON(&authResult).
 			Fetch(c)
-		if err != nil {
-			return nil, err
-		}
 
 		if len(authResult.Error) > 0 {
 			return authResult, errors.New(authResult.Error)
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		authCache.Add(cacheKey, authResult)

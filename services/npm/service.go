@@ -35,7 +35,7 @@ func NewService(storage storage.BaseStorageBackend) *Service {
 		BasePackageService: services.BasePackageService{
 			Prefix:                   "npm",
 			Storage:                  storage,
-			PublicRegistryPathPrefix: "",
+			PublicRegistryPathPrefix: "/",
 			PublicRegistryUrl:        "https://registry.npmjs.org",
 		},
 	}

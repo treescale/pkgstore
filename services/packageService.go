@@ -94,8 +94,12 @@ func (s *BasePackageService) ConstructFullPkgName(c *gin.Context) (string, strin
 }
 
 func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {
-	urlPath := s.PublicRegistryUrl + c.Param("path")
-	remote, err := url.Parse(s.PublicRegistryPathPrefix + urlPath)
+	pkgName, _ := s.ConstructFullPkgName(c)
+	urlPath := s.PublicRegistryPathPrefix + pkgName
+	if urlPath[0] != '/' {
+		urlPath = "/" + urlPath
+	}
+	remote, err := url.Parse(s.PublicRegistryUrl + urlPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
