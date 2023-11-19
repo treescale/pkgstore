@@ -44,7 +44,7 @@ func (*PackageVersion[T]) TableName() string {
 }
 
 func (p *PackageVersion[T]) FillByName(version string) error {
-	return db.DB().Find(p, "version = ? AND namespace = ?", version, p.Namespace).Preload("Asset").Error
+	return db.DB().Order("created_at desc").Find(p, "version = ? AND namespace = ?", version, p.Namespace).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) FillById(id uint64) error {
@@ -56,7 +56,7 @@ func (p *PackageVersion[T]) FillByDigest(digest string) error {
 	if !match {
 		return errors.New("invalid digest")
 	}
-	return db.DB().Find(p, "digest = ? AND namespace = ?", digest, p.Namespace).Preload("Asset").Error
+	return db.DB().Order("created_at desc").Find(p, "digest = ? AND namespace = ?", digest, p.Namespace).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) Insert() error {

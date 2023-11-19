@@ -316,6 +316,7 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		pkgVersion.Version = tagName
 		pkgVersion.Tag = tagName
 		pkgVersion.Metadata = datatypes.NewJSONType[PackageMetadata](metadata)
+		pkgVersion.Digest = metadata.Digest
 		pkgVersion.Size = versionSize
 		err = pkgVersion.Save()
 	}

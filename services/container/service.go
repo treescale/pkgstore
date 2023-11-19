@@ -1,13 +1,16 @@
 package container
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/services"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -81,6 +84,53 @@ func (s *Service) SetAuthHeaderAndAbort(c *gin.Context) {
 		},
 	})
 	c.Abort()
+}
+
+func (s *Service) GetManifestDigests(pkgVersion *models.PackageVersion[PackageMetadata]) (map[string]uint64, error) {
+	digests := make(map[string]uint64)
+	metadata := pkgVersion.Metadata.Data()
+	switch metadata.ContentType {
+	case ManifestV1ContentType:
+		manifest := ManifestV1{}
+		err := json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, layer := range manifest.FsLayers {
+			asset := models.Asset{}
+			layerDigest := strings.Replace(layer.BlobSum, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				return nil, err
+			}
+			if asset.Digest != layerDigest {
+				return nil, fmt.Errorf("asset not found")
+			}
+
+			digests[strings.Replace(layer.BlobSum, "sha256:", "", -1)] = asset.Size
+		}
+	case ManifestV2ContentType, ManifestOCIV1ContentType:
+		manifest := ManifestV2{}
+		err := json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return nil, err
+		}
+		for _, layer := range manifest.Layers {
+			digests[strings.Replace(layer.Digest, "sha256:", "", -1)] = uint64(layer.Size)
+		}
+	case ManifestListV2ContentType, ManifestOCIIndexV1ContentType:
+		manifest := ManifestListV2{}
+		err := json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return nil, err
+		}
+		for _, manifestDescriptor := range manifest.Manifests {
+			digests[strings.Replace(manifestDescriptor.Digest, "sha256:", "", -1)] = uint64(manifestDescriptor.Size)
+		}
+	}
+
+	return digests, nil
 }
 
 type ManifestV1 struct {
