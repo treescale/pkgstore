@@ -55,6 +55,7 @@ func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[Package
 	}
 	if strings.Contains(tagOrDigest, "sha256:") {
 		pkgVersion.Namespace = namespace
+		pkgVersion.Service = s.Prefix
 		err = pkgVersion.FillByDigest(strings.Replace(tagOrDigest, "sha256:", "", 1))
 	} else {
 		pkgVersion, err = pkg.Version(tagOrDigest)

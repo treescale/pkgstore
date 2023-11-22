@@ -1,13 +1,16 @@
 package container
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/services"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -81,6 +84,79 @@ func (s *Service) SetAuthHeaderAndAbort(c *gin.Context) {
 		},
 	})
 	c.Abort()
+}
+
+func (s *Service) GetAssetsByManifest(metadata *PackageMetadata) (assets []models.Asset, err error) {
+	assets = make([]models.Asset, 0)
+
+	switch metadata.ContentType {
+	case ManifestV1ContentType:
+		manifest := ManifestV1{}
+		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return
+		}
+		if len(manifest.FsLayers) == 0 {
+			return
+		}
+		for _, layer := range manifest.FsLayers {
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
+			layerDigest := strings.Replace(layer.BlobSum, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				return
+			}
+			if asset.Digest != layerDigest {
+				return
+			}
+			assets = append(assets, asset)
+		}
+	case ManifestV2ContentType, ManifestOCIV1ContentType:
+		manifest := ManifestV2{}
+		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return
+		}
+		for _, layer := range manifest.Layers {
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
+			layerDigest := strings.Replace(layer.Digest, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				return
+			}
+			if asset.Digest != layerDigest {
+				return
+			}
+			assets = append(assets, asset)
+		}
+	case ManifestListV2ContentType, ManifestOCIIndexV1ContentType:
+		manifest := ManifestListV2{}
+		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
+		if err != nil {
+			return
+		}
+		for _, manifestDescriptor := range manifest.Manifests {
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
+			layerDigest := strings.Replace(manifestDescriptor.Digest, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				return
+			}
+			if asset.Digest != layerDigest {
+				return
+			}
+
+			assets = append(assets, asset)
+		}
+	}
+
+	return
 }
 
 type ManifestV1 struct {
