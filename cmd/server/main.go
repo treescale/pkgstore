@@ -7,12 +7,14 @@ import (
 	_ "github.com/alin-io/pkgstore/db"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/router"
+	"github.com/alin-io/pkgstore/services"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
 
 //go:embed all:ui
@@ -33,6 +35,22 @@ func main() {
 
 	// Sync Models with the DB
 	models.SyncModels()
+
+	if len(os.Args) > 1 && os.Args[1] == "cleanup" {
+		gc := services.GarbageCollector{
+			Storage: storageBackend,
+		}
+		dryrun := false
+		if len(os.Args) > 2 && os.Args[2] == "dryrun" {
+			dryrun = true
+		}
+		assets, err := gc.CleanupAssets(dryrun)
+		if err != nil {
+			panic(err)
+		}
+		log.Println("Found", len(assets), "assets to cleanup")
+		return
+	}
 
 	r := router.SetupGinServer()
 	// Setup Cors if we are in Debug mode, otherwise UI would be under the same domain name

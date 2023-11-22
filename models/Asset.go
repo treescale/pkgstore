@@ -86,3 +86,10 @@ func (t *Asset) SetRandomDigest() {
 	hash := sha256.Sum256(data)
 	t.Digest = fmt.Sprintf("%x", hash)
 }
+
+func (t *Asset) GetVersion() (version *PackageVersion[any], err error) {
+	version = &PackageVersion[any]{}
+	err = db.DB().Find(version, `asset_ids LIKE ?`, "%"+t.ID.String()+"%").Error
+	return
+
+}

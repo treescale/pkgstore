@@ -146,7 +146,3 @@ func (s *BasePackageService) AbortRequestWithError(c *gin.Context, status int, m
 	})
 	c.Abort()
 }
-
-func (s *BasePackageService) CleanupAssets(bool) (assets []models.Asset, err error) {
-	return nil, fmt.Errorf("not implemented for %s", s.Prefix)
-}
