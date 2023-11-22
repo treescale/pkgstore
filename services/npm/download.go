@@ -17,11 +17,13 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	_, version := s.PkgVersionFromFilename(filename)
 	pkg := models.Package[PackageMetadata]{
 		Namespace: namespace,
+		Service:   s.Prefix,
 	}
 	versionInfo := models.PackageVersion[PackageMetadata]{
 		Namespace: namespace,
+		Service:   s.Prefix,
 	}
-	err := pkg.FillByName(pkgName, s.Prefix)
+	err := pkg.FillByName(pkgName)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
@@ -43,13 +45,20 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	fileAsset, err := versionInfo.GetAsset()
+	fileAssets, err := versionInfo.GetAssets()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
 	}
 
-	if fileAsset == nil || fileAsset.ID == uuid.Nil {
+	if len(fileAssets) == 0 {
+		c.JSON(404, gin.H{"error": "Not Found"})
+		return
+	}
+
+	fileAsset := fileAssets[0]
+
+	if fileAsset.ID == uuid.Nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}

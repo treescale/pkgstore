@@ -49,11 +49,13 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	packageModel := models.Package[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
 	pkgVersion := models.PackageVersion[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	_ = packageModel.FillByName(pkgName, s.Prefix)
+	_ = packageModel.FillByName(pkgName)
 	if packageModel.ID != uuid.Nil {
 		pkgVersion, err = packageModel.Version(pkgVersionName)
 		if err != nil {
@@ -97,13 +99,32 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 
 	asset := models.Asset{
-		Size:        uint64(size),
-		Digest:      checksum,
-		UploadUUID:  uuid.NewString(),
-		UploadRange: fmt.Sprintf("0-%d", size),
+		Service: s.Prefix,
 	}
 
-	_ = asset.Insert()
+	err = asset.FillByDigest(checksum)
+	if err != nil {
+		log.Println("Unable to fill asset by digest: ", err)
+		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		return
+	}
+
+	if asset.ID == uuid.Nil {
+		asset = models.Asset{
+			Size:        size,
+			Service:     s.Prefix,
+			Digest:      checksum,
+			UploadUUID:  uuid.NewString(),
+			UploadRange: fmt.Sprintf("0-%d", size),
+		}
+
+		err = asset.Insert()
+		if err != nil {
+			log.Println("Unable to insert asset: ", err)
+			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+			return
+		}
+	}
 
 	if packageModel.ID != uuid.Nil && len(pkgVersion.Digest) > 0 {
 		if slices.Contains(pkgVersion.Metadata.Data().OriginalFiles, file.Filename) {
@@ -117,6 +138,14 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			err = pkgVersion.Save()
 			if err != nil {
 				log.Println("Unable to update package version metadata: ", err)
+				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				return
+			}
+			err = pkgVersion.AddAsset(&asset)
+			if err != nil {
+				log.Println("Unable to add asset to package version: ", err)
+				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				return
 			}
 		}
 	} else {
@@ -131,6 +160,7 @@ func (s *Service) UploadHandler(c *gin.Context) {
 				RequiresPython: c.PostForm("requires_python"),
 				OriginalFiles:  []string{file.Filename},
 			}),
+			AssetIds: asset.ID.String(),
 		}
 
 		packageModel = models.Package[PackageMetadata]{

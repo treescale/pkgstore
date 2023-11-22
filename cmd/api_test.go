@@ -21,7 +21,7 @@ func TestApiPackagesList(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &versionInfo)
 	assert.Nil(t, err)
 
-	w, req = UploadTestPypiPackage(pkgName, version)
+	w, req, _ = UploadTestPypiPackage(pkgName, version)
 	serverApp.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 

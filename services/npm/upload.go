@@ -56,8 +56,9 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	pkg := models.Package[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	err = pkg.FillByName(requestBody.Name, s.Prefix)
+	err = pkg.FillByName(requestBody.Name)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
 		return
@@ -78,27 +79,41 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		}
 	}
 
-	if len(pkgVersion.Digest) == 0 {
-		for _, versionInfo := range requestBody.Versions {
-			currentVersion = versionInfo.Version
-
-			pkgVersion = models.PackageVersion[PackageMetadata]{
-				Version:   currentVersion,
-				Digest:    checksum,
-				Service:   s.Prefix,
-				AuthId:    authCtx.AuthId,
-				Namespace: authCtx.Namespace,
-				Metadata:  datatypes.NewJSONType[PackageMetadata](versionInfo),
-			}
-
-			for tagName, tagVersion := range requestBody.DistTags {
-				if tagVersion == versionInfo.Version {
-					pkgVersion.Tag = tagName
-					break
-				}
-			}
-			break
+	if pkgVersion.ID != uuid.Nil && len(pkgVersion.Digest) > 0 {
+		if pkgVersion.Digest == checksum {
+			c.JSON(200, MetadataResponse{
+				Name:     pkg.Name,
+				DistTags: requestBody.DistTags,
+				Versions: map[string]PackageMetadata{
+					pkgVersion.Version: pkgVersion.Metadata.Data(),
+				},
+			})
+			return
+		} else {
+			c.JSON(400, gin.H{"error": "Wrong checksum for the existing Package Version"})
+			return
 		}
+	}
+
+	for _, versionInfo := range requestBody.Versions {
+		currentVersion = versionInfo.Version
+
+		pkgVersion = models.PackageVersion[PackageMetadata]{
+			Version:   currentVersion,
+			Digest:    checksum,
+			Service:   s.Prefix,
+			AuthId:    authCtx.AuthId,
+			Namespace: authCtx.Namespace,
+			Metadata:  datatypes.NewJSONType[PackageMetadata](versionInfo),
+		}
+
+		for tagName, tagVersion := range requestBody.DistTags {
+			if tagVersion == versionInfo.Version {
+				pkgVersion.Tag = tagName
+				break
+			}
+		}
+		break
 	}
 
 	err = s.Storage.WriteFile(s.PackageFilename(checksum), nil, bytes.NewReader(decodedBytes))
@@ -108,15 +123,34 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 
 	asset := models.Asset{
-		Size:        uint64(len(decodedBytes)),
-		Digest:      checksum,
-		UploadUUID:  uuid.NewString(),
-		UploadRange: fmt.Sprintf("0-%d", len(decodedBytes)),
+		Service: s.Prefix,
 	}
 
-	_ = asset.Insert()
+	err = asset.FillByDigest(checksum)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		return
+	}
+
+	if asset.ID == uuid.Nil {
+		asset = models.Asset{
+			Size:        int64(len(decodedBytes)),
+			Service:     s.Prefix,
+			Digest:      checksum,
+			UploadUUID:  uuid.NewString(),
+			UploadRange: fmt.Sprintf("0-%d", len(decodedBytes)),
+		}
+		err = asset.Insert()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+			return
+		}
+	}
 
 	pkgVersion.Size = asset.Size
+	pkgVersion.AssetIds = asset.ID.String()
+
+	pkg.LatestVersion = pkgVersion.Version
 
 	if pkg.ID == uuid.Nil {
 		pkg.Versions = []models.PackageVersion[PackageMetadata]{pkgVersion}

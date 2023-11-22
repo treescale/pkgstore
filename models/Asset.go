@@ -12,10 +12,11 @@ import (
 )
 
 type Asset struct {
-	ID uuid.UUID `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
+	ID      uuid.UUID `gorm:"column:id;primaryKey;" json:"id" binding:"required"`
+	Service string    `gorm:"column:service;not null" json:"service" binding:"required"`
 
 	Digest string `gorm:"column:digest;index,not null;uniqueIndex" json:"digest" binding:"required"`
-	Size   uint64 `gorm:"column:size;not null" json:"size" binding:"required"`
+	Size   int64  `gorm:"column:size;not null" json:"size" binding:"required"`
 
 	UploadUUID  string `gorm:"column:upload_uuid;uniqueIndex;not null" json:"upload_uuid" binding:"required"`
 	UploadRange string `gorm:"column:upload_range;not null" json:"upload_range" binding:"required"`
@@ -58,15 +59,15 @@ func (t *Asset) FillByDigest(digest string) error {
 	if !match {
 		return errors.New("invalid digest")
 	}
-	return db.DB().Find(t, `digest = ?`, digest).Error
+	return db.DB().Find(t, `digest = ? AND service = ?`, digest, t.Service).Error
 }
 
 func (t *Asset) FillById(id string) error {
-	return db.DB().Find(t, "id = ?", id).Error
+	return db.DB().Find(t, "id = ? AND service = ?", id, t.Service).Error
 }
 
 func (t *Asset) FillByUploadUUID(uploadUUID string) error {
-	return db.DB().Find(t, `"upload_uuid" = ?`, uploadUUID).Error
+	return db.DB().Find(t, `"upload_uuid" = ? AND service = ?`, uploadUUID, t.Service).Error
 }
 
 func (t *Asset) Update() error {

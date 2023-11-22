@@ -48,8 +48,11 @@ func PkgNameAccessHandler(service services.PackageService) gin.HandlerFunc {
 			}
 
 			if len(pkgName) > 0 {
-				pkg := models.Package[any]{}
-				err := pkg.FillByName(pkgName, service.GetPrefix())
+				pkg := models.Package[any]{
+					Namespace: authResult.Namespace,
+					Service:   service.GetPrefix(),
+				}
+				err := pkg.FillByName(pkgName)
 				if err != nil {
 					service.AbortRequestWithError(c, 500, "Unable to check the DB for the package")
 					return

@@ -35,8 +35,8 @@ func (*Package[T]) TableName() string {
 	return "packages"
 }
 
-func (p *Package[T]) FillByName(name, service string) error {
-	return db.DB().Find(&p, "name = ? AND service = ? AND namespace = ?", name, service, p.Namespace).Error
+func (p *Package[T]) FillByName(name string) error {
+	return db.DB().Find(&p, "name = ? AND service = ? AND namespace = ?", name, p.Service, p.Namespace).Error
 }
 
 func (p *Package[T]) FillVersions() error {
@@ -46,7 +46,7 @@ func (p *Package[T]) FillVersions() error {
 	if p.ID == uuid.Nil {
 		return nil
 	}
-	return db.DB().Find(&p.Versions, "package_id = ? AND namespace = ?", p.ID.String(), p.Namespace).Error
+	return db.DB().Find(&p.Versions, "package_id = ? AND namespace = ? AND service = ?", p.ID.String(), p.Namespace, p.Service).Error
 }
 
 func (p *Package[T]) Version(name string) (PackageVersion[T], error) {
@@ -55,7 +55,7 @@ func (p *Package[T]) Version(name string) (PackageVersion[T], error) {
 		return version, nil
 	}
 
-	err := db.DB().Find(&version, "package_id = ? AND version = ? AND namespace = ?", p.ID.String(), name, p.Namespace).Error
+	err := db.DB().Find(&version, "package_id = ? AND version = ? AND namespace = ? AND service = ?", p.ID.String(), name, p.Namespace, p.Service).Error
 	if err != nil {
 		return version, err
 	}

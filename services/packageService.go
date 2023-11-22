@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -28,6 +29,8 @@ type PackageService interface {
 	GetPrefix() string
 
 	AbortRequestWithError(c *gin.Context, status int, message string)
+
+	CleanupAssets(dryrun bool) (assets []models.Asset, err error)
 }
 
 type BasePackageService struct {
@@ -142,4 +145,8 @@ func (s *BasePackageService) AbortRequestWithError(c *gin.Context, status int, m
 		},
 	})
 	c.Abort()
+}
+
+func (s *BasePackageService) CleanupAssets(bool) (assets []models.Asset, err error) {
+	return nil, fmt.Errorf("not implemented for %s", s.Prefix)
 }

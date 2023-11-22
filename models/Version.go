@@ -7,6 +7,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -19,7 +20,7 @@ type PackageVersion[MetaType any] struct {
 	Namespace string    `gorm:"column:namespace;index;not null" json:"namespace" binding:"required"`
 
 	Digest string `gorm:"column:digest;index" json:"digest"`
-	Size   uint64 `gorm:"column:size;not null" json:"size" binding:"required"`
+	Size   int64  `gorm:"column:size;not null" json:"size" binding:"required"`
 
 	PackageId uuid.UUID `gorm:"column:package_id;uniqueIndex:pkg_id_version;uniqueIndex:pkg_id_tag;" json:"package_id" binding:"required"`
 
@@ -30,6 +31,8 @@ type PackageVersion[MetaType any] struct {
 
 	CreatedAt time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
+
+	AssetIds string `gorm:"column:asset_ids" json:"asset_ids"`
 }
 
 func (p *PackageVersion[T]) BeforeCreate(_ *gorm.DB) (err error) {
@@ -44,7 +47,7 @@ func (*PackageVersion[T]) TableName() string {
 }
 
 func (p *PackageVersion[T]) FillByName(version string) error {
-	return db.DB().Order("created_at desc").Find(p, "version = ? AND namespace = ?", version, p.Namespace).Preload("Asset").Error
+	return db.DB().Order("created_at desc").Find(p, "version = ? AND namespace = ? AND service = ?", version, p.Namespace, p.Service).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) FillById(id uint64) error {
@@ -56,7 +59,7 @@ func (p *PackageVersion[T]) FillByDigest(digest string) error {
 	if !match {
 		return errors.New("invalid digest")
 	}
-	return db.DB().Order("created_at desc").Find(p, "digest = ? AND namespace = ?", digest, p.Namespace).Preload("Asset").Error
+	return db.DB().Order("created_at desc").Find(p, "digest = ? AND namespace = ? AND service = ?", digest, p.Namespace, p.Service).Preload("Asset").Error
 }
 
 func (p *PackageVersion[T]) Insert() error {
@@ -75,11 +78,33 @@ func (p *PackageVersion[T]) Delete() error {
 	return db.DB().Delete(&PackageVersion[T]{}, "id = ?", p.ID).Error
 }
 
-func (p *PackageVersion[T]) GetAsset() (*Asset, error) {
-	asset := &Asset{}
-	if len(p.Digest) == 0 {
-		return nil, nil
+func (p *PackageVersion[T]) AddAsset(asset *Asset) error {
+	if p.ID == uuid.Nil {
+		return nil
 	}
-	err := db.DB().Where("digest = ?", p.Digest).Find(&asset).Error
-	return asset, err
+	id := asset.ID.String()
+	if p.AssetIds == "" {
+		p.AssetIds = id
+	} else if !strings.Contains(p.AssetIds, id) {
+		p.AssetIds = p.AssetIds + "," + id
+	} else {
+		return nil
+	}
+	return p.Save()
+}
+
+func (p *PackageVersion[T]) GetAssets() (assets []Asset, err error) {
+	err = db.DB().Find(&assets, "id IN ?", strings.Split(p.AssetIds, ",")).Error
+	return
+}
+
+func (p *PackageVersion[T]) SetAssets(assets []Asset) (err error) {
+	for _, asset := range assets {
+		if p.AssetIds == "" {
+			p.AssetIds = asset.ID.String()
+		} else if !strings.Contains(p.AssetIds, asset.ID.String()) {
+			p.AssetIds = p.AssetIds + "," + asset.ID.String()
+		}
+	}
+	return p.Save()
 }

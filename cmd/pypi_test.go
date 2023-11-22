@@ -15,13 +15,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func TestPypiPackageUpload(t *testing.T) {
 	pkgName := uuid.NewString()
 	version := "0.0.1"
-	w, req := UploadTestPypiPackage(pkgName, version)
+	w, req, _ := UploadTestPypiPackage(pkgName, version)
 	serverApp.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -46,7 +45,7 @@ func TestPackageMetadata(t *testing.T) {
 
 	t.Run("should respond with metadata JSON if package exists", func(t *testing.T) {
 		for _, pkgName := range []string{uuid.NewString(), uuid.NewString() + "/" + uuid.NewString()} {
-			w, req := UploadTestPypiPackage(pkgName, "0.0.1")
+			w, req, _ := UploadTestPypiPackage(pkgName, "0.0.1")
 			serverApp.ServeHTTP(w, req)
 
 			assert.Equal(t, 200, w.Code)
@@ -67,7 +66,7 @@ func TestPackageMetadata(t *testing.T) {
 func TestPypiPackageDownload(t *testing.T) {
 	pkgName := uuid.NewString()
 	version := "0.0.1"
-	w, req := UploadTestPypiPackage(pkgName, version)
+	w, req, digest := UploadTestPypiPackage(pkgName, version)
 	serverApp.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Code)
 	versionInfo := npm.MetadataResponse{}
@@ -77,7 +76,7 @@ func TestPypiPackageDownload(t *testing.T) {
 	w.Flush()
 
 	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", fmt.Sprintf("/pypi/files/%[1]s/%[2]s-%[3]s.tar.gz", fmt.Sprintf("%x", sha256.Sum256([]byte(time.Now().String()))), pkgName, version), nil)
+	req, _ = http.NewRequest("GET", fmt.Sprintf("/pypi/files/%[1]s/%[2]s-%[3]s.tar.gz", digest, pkgName, version), nil)
 	serverApp.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -89,7 +88,7 @@ func TestPypiPackageDownload(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func UploadTestPypiPackage(name, version string) (*httptest.ResponseRecorder, *http.Request) {
+func UploadTestPypiPackage(name, version string) (*httptest.ResponseRecorder, *http.Request, string) {
 	w := httptest.NewRecorder()
 	filename := fmt.Sprintf("%s-%s.tar.gz", name, version)
 	bodyBuffer := bytes.NewBuffer([]byte{})
@@ -110,5 +109,5 @@ func UploadTestPypiPackage(name, version string) (*httptest.ResponseRecorder, *h
 
 	req, _ := http.NewRequest("POST", "/pypi", bodyBuffer)
 	req.Header.Set("Content-Type", formWriter.FormDataContentType())
-	return w, req
+	return w, req, fmt.Sprintf("%x", sha256.Sum256(randomBytes))
 }

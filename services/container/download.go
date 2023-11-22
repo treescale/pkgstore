@@ -17,8 +17,9 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	digest := strings.Replace(inputDigest, "sha256:", "", 1)
 	pkg := models.Package[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	err := pkg.FillByName(name, s.Prefix)
+	err := pkg.FillByName(name)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
@@ -28,7 +29,9 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err = asset.FillByDigest(digest)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
@@ -52,7 +55,7 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		}
 	}(fileData)
 
-	c.DataFromReader(200, int64(asset.Size), "application/octet-stream", fileData, map[string]string{
+	c.DataFromReader(200, asset.Size, "application/octet-stream", fileData, map[string]string{
 		"Content-Disposition": "attachment; filename=" + digest,
 	})
 }

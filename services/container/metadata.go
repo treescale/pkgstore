@@ -42,8 +42,9 @@ func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[Package
 	tagOrDigest := c.Param("reference")
 	pkg = models.Package[PackageMetadata]{
 		Namespace: namespace,
+		Service:   s.Prefix,
 	}
-	err := pkg.FillByName(name, s.Prefix)
+	err := pkg.FillByName(name)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return

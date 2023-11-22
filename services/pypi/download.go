@@ -11,15 +11,18 @@ import (
 
 func (s *Service) DownloadHandler(c *gin.Context) {
 	filename := c.Param("filename")
+	digest := c.Param("sha256")
 	pkgName, version := s.PkgVersionFromFilename(filename)
 	authCtx := middlewares.GetAuthCtx(c)
 	pkg := models.Package[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
 	versionInfo := models.PackageVersion[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	err := pkg.FillByName(pkgName, s.Prefix)
+	err := pkg.FillByName(pkgName)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
@@ -41,13 +44,22 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	fileAsset, err := versionInfo.GetAsset()
+	fileAssets, err := versionInfo.GetAssets()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
 	}
 
-	if fileAsset == nil || fileAsset.ID == uuid.Nil {
+	fileAsset := models.Asset{}
+
+	for _, item := range fileAssets {
+		if item.Digest == digest {
+			fileAsset = item
+			break
+		}
+	}
+
+	if fileAsset.ID == uuid.Nil {
 		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}

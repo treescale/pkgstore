@@ -5,7 +5,7 @@ import (
 )
 
 func SyncModels() {
-	err := db.DB().AutoMigrate(&Package[any]{}, &PackageVersion[any]{}, Asset{})
+	err := db.DB().AutoMigrate(&Package[any]{}, &PackageVersion[any]{}, &Asset{})
 	if err != nil {
 		panic(err)
 	}

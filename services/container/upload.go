@@ -18,7 +18,9 @@ import (
 // StartLayerUploadHandler POST /v2/<name>/blobs/uploads/
 func (s *Service) StartLayerUploadHandler(c *gin.Context) {
 	pkgName, _ := s.ConstructFullPkgName(c)
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err := asset.StartUpload()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to Start the upload process"})
@@ -35,7 +37,9 @@ func (s *Service) StartLayerUploadHandler(c *gin.Context) {
 
 func (s *Service) CheckBlobExistenceHandler(c *gin.Context) {
 	digest := strings.Replace(c.Param("sha256"), "sha256:", "", 1)
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err := asset.FillByDigest(digest)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
@@ -56,7 +60,9 @@ func (s *Service) CheckBlobExistenceHandler(c *gin.Context) {
 func (s *Service) GetUploadProgressHandler(c *gin.Context) {
 	pkgName, _ := s.ConstructFullPkgName(c)
 	uploadUUID := c.Param("uuid")
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
@@ -77,7 +83,9 @@ func (s *Service) GetUploadProgressHandler(c *gin.Context) {
 func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	pkgName, _ := s.ConstructFullPkgName(c)
 	uploadUUID := c.Param("uuid")
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
@@ -116,7 +124,9 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	pkgName, _ := s.ConstructFullPkgName(c)
 	inputDigest := strings.Replace(c.Query("digest"), "sha256:", "", 1)
 	uploadUUID := c.Param("uuid")
-	asset := models.Asset{}
+	asset := models.Asset{
+		Service: s.Prefix,
+	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
@@ -144,7 +154,9 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		return
 	}
 
-	asset2 := models.Asset{}
+	asset2 := models.Asset{
+		Service: s.Prefix,
+	}
 	err = asset2.FillByDigest(digest)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
@@ -194,7 +206,8 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		Digest:         digest,
 	}
 
-	versionSize := uint64(0)
+	versionSize := int64(0)
+	assets := make([]models.Asset, 0)
 
 	switch metadata.ContentType {
 	case ManifestV1ContentType:
@@ -211,7 +224,9 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			return
 		}
 		for _, layer := range manifest.FsLayers {
-			asset := models.Asset{}
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
 			layerDigest := strings.Replace(layer.BlobSum, "sha256:", "", 1)
 			err = asset.FillByDigest(layerDigest)
 			if err != nil {
@@ -223,6 +238,7 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 				return
 			}
 			versionSize += asset.Size
+			assets = append(assets, asset)
 		}
 	case ManifestV2ContentType, ManifestOCIV1ContentType:
 		manifest := ManifestV2{}
@@ -232,7 +248,9 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			return
 		}
 		for _, layer := range manifest.Layers {
-			asset := models.Asset{}
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
 			layerDigest := strings.Replace(layer.Digest, "sha256:", "", 1)
 			err = asset.FillByDigest(layerDigest)
 			if err != nil {
@@ -244,6 +262,7 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 				return
 			}
 			versionSize += asset.Size
+			assets = append(assets, asset)
 		}
 	case ManifestListV2ContentType, ManifestOCIIndexV1ContentType:
 		manifest := ManifestListV2{}
@@ -253,7 +272,22 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			return
 		}
 		for _, manifestDescriptor := range manifest.Manifests {
-			versionSize += uint64(manifestDescriptor.Size)
+			asset := models.Asset{
+				Service: s.Prefix,
+			}
+			layerDigest := strings.Replace(manifestDescriptor.Digest, "sha256:", "", 1)
+			err = asset.FillByDigest(layerDigest)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				return
+			}
+			if asset.Digest != layerDigest {
+				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				return
+			}
+
+			versionSize += int64(manifestDescriptor.Size)
+			assets = append(assets, asset)
 		}
 	default:
 		c.JSON(400, gin.H{"error": "Bad Request"})
@@ -266,10 +300,10 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	}
 
 	pkg := models.Package[PackageMetadata]{
-		AuthId:    authCtx.AuthId,
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	err = pkg.FillByName(pkgName, s.Prefix)
+	err = pkg.FillByName(pkgName)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
 		return
@@ -308,6 +342,9 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			Metadata:  datatypes.NewJSONType[PackageMetadata](metadata),
 		}
 		err = pkgVersion.Save()
+		if err == nil {
+			err = pkgVersion.SetAssets(assets)
+		}
 	} else {
 		if pkgVersion.PackageId != pkg.ID || pkgVersion.Service != s.Prefix {
 			c.JSON(404, gin.H{"error": "Package version not found"})
@@ -319,6 +356,13 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		pkgVersion.Digest = metadata.Digest
 		pkgVersion.Size = versionSize
 		err = pkgVersion.Save()
+
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Unable to insert package version"})
+			return
+		}
+
+		err = pkgVersion.SetAssets(assets)
 	}
 
 	if err != nil {
@@ -338,7 +382,7 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 }
 
 type sizeHandler struct {
-	size uint64
+	size int64
 }
 
 type partialReadWriter struct {
@@ -350,12 +394,12 @@ type partialReadWriter struct {
 
 func (p partialReadWriter) Read(b []byte) (n int, err error) {
 	n, err = p.input.Read(b)
-	p.totalSize.size += uint64(n)
+	p.totalSize.size += int64(n)
 	_, _ = p.output.Write(b[:n])
 	return n, err
 }
 
-func (s *Service) appendStorageData(uploadUUID string, input io.Reader) (digest string, size uint64, err error) {
+func (s *Service) appendStorageData(uploadUUID string, input io.Reader) (digest string, size int64, err error) {
 	fileReader, err := s.Storage.GetFile(s.PackageFilename(uploadUUID))
 	if err != nil {
 		return "", 0, err

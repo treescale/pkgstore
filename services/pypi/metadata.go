@@ -14,8 +14,9 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	authCtx := middlewares.GetAuthCtx(c)
 	pkg := models.Package[PackageMetadata]{
 		Namespace: authCtx.Namespace,
+		Service:   s.Prefix,
 	}
-	err := pkg.FillByName(pkgName, s.Prefix)
+	err := pkg.FillByName(pkgName)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
