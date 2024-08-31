@@ -3,9 +3,9 @@ package db
 import (
 	"strings"
 
-	"github.com/alin-io/pkgstore/config"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
+	"github.com/treescale/pkgstore/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

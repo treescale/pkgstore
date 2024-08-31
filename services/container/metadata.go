@@ -2,11 +2,12 @@ package container
 
 import (
 	"fmt"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/models"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"strings"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/models"
 )
 
 func (s *Service) MetadataHandler(c *gin.Context) {

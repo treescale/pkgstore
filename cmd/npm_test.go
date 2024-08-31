@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/treescale/pkgstore/services/npm"
 )
 
 func TestNpmPackageUpload(t *testing.T) {
@@ -113,7 +113,7 @@ func NpmPackageDataReader(name, version string) *bytes.Buffer {
             "_nodeVersion": "12.18.4",
             "_npmVersion": "6.14.6",
             "author": {
-                "name": "Alin.io Package Registry Utility"
+                "name": "TreeScale.com Package Registry Utility"
             },
             "description": "Package created by me",
             "dist": {

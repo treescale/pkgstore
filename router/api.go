@@ -1,10 +1,10 @@
 package router
 
 import (
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/services/api"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/services/api"
+	"github.com/treescale/pkgstore/storage"
 )
 
 func initApiRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {

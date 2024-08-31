@@ -1,11 +1,12 @@
 package api
 
 import (
-	"github.com/alin-io/pkgstore/db"
-	"github.com/alin-io/pkgstore/models"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"strconv"
+	"github.com/treescale/pkgstore/db"
+	"github.com/treescale/pkgstore/models"
 )
 
 func (s *Service) ListVersionsHandler(c *gin.Context) {

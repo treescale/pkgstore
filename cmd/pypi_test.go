@@ -11,11 +11,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/services/npm"
-	"github.com/alin-io/pkgstore/services/pypi"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/services/npm"
+	"github.com/treescale/pkgstore/services/pypi"
 )
 
 func TestPypiPackageUpload(t *testing.T) {

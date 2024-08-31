@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/models"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/models"
 	"gorm.io/datatypes"
-	"log"
 )
 
 type npmUploadRequestBody struct {

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alin-io/pkgstore/config"
 	"github.com/carlmjohnson/requests"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/golang-lru/v2/expirable"
+	"github.com/treescale/pkgstore/config"
 )
 
 type AuthResult struct {

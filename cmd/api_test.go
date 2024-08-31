@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/treescale/pkgstore/models"
+	"github.com/treescale/pkgstore/services/npm"
 )
 
 func TestApiPackagesList(t *testing.T) {

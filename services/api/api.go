@@ -2,11 +2,12 @@ package api
 
 import (
 	"database/sql"
-	"github.com/alin-io/pkgstore/db"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/services"
-	"github.com/alin-io/pkgstore/storage"
+
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/db"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/services"
+	"github.com/treescale/pkgstore/storage"
 )
 
 type Service struct {

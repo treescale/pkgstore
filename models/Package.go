@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/alin-io/pkgstore/db"
 	"github.com/google/uuid"
+	"github.com/treescale/pkgstore/db"
 	"gorm.io/gorm"
 )
 

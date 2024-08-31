@@ -3,11 +3,11 @@ package middlewares
 import (
 	"strings"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/models"
+	"github.com/treescale/pkgstore/services"
 )
 
 func PkgNameAccessHandler(service services.PackageService) gin.HandlerFunc {

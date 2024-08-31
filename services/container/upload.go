@@ -5,14 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/datatypes"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/models"
+	"gorm.io/datatypes"
 )
 
 // StartLayerUploadHandler POST /v2/<name>/blobs/uploads/

@@ -3,11 +3,11 @@ package pypi
 import (
 	"fmt"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/models"
 )
 
 func (s *Service) MetadataHandler(c *gin.Context) {

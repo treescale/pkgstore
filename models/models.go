@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/alin-io/pkgstore/db"
+	"github.com/treescale/pkgstore/db"
 )
 
 func SyncModels() {

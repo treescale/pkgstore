@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/services/container"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/services/container"
+	"github.com/treescale/pkgstore/storage"
 )
 
 func initContainerRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {

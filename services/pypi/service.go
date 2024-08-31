@@ -3,8 +3,8 @@ package pypi
 import (
 	"fmt"
 
-	"github.com/alin-io/pkgstore/services"
-	"github.com/alin-io/pkgstore/storage"
+	"github.com/treescale/pkgstore/services"
+	"github.com/treescale/pkgstore/storage"
 )
 
 type PackageMetadata struct {

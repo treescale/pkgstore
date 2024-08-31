@@ -3,14 +3,15 @@ package container
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/services"
-	"github.com/alin-io/pkgstore/storage"
-	"github.com/gin-gonic/gin"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/models"
+	"github.com/treescale/pkgstore/services"
+	"github.com/treescale/pkgstore/storage"
 )
 
 const (

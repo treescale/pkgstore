@@ -1,8 +1,8 @@
 package npm
 
 import (
-	"github.com/alin-io/pkgstore/services"
-	"github.com/alin-io/pkgstore/storage"
+	"github.com/treescale/pkgstore/services"
+	"github.com/treescale/pkgstore/storage"
 )
 
 type Service struct {

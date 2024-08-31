@@ -3,11 +3,11 @@ package router
 import (
 	"fmt"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/middlewares"
-	"github.com/alin-io/pkgstore/services/npm"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/middlewares"
+	"github.com/treescale/pkgstore/services/npm"
+	"github.com/treescale/pkgstore/storage"
 )
 
 func initNpmRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {

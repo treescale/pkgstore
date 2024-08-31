@@ -1,4 +1,4 @@
-module github.com/alin-io/pkgstore
+module github.com/treescale/pkgstore
 
 go 1.21
 

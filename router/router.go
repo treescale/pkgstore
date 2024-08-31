@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/alin-io/pkgstore/services"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/services"
+	"github.com/treescale/pkgstore/storage"
 )
 
 func SetupGinServer() *gin.Engine {

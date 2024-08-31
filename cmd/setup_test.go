@@ -5,13 +5,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alin-io/pkgstore/db"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/router"
-	"github.com/alin-io/pkgstore/services/npm"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/treescale/pkgstore/db"
+	"github.com/treescale/pkgstore/models"
+	"github.com/treescale/pkgstore/router"
+	"github.com/treescale/pkgstore/services/npm"
+	"github.com/treescale/pkgstore/storage"
 )
 
 var (

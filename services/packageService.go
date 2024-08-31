@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/treescale/pkgstore/config"
+	"github.com/treescale/pkgstore/models"
+	"github.com/treescale/pkgstore/storage"
 )
 
 type PackageService interface {
