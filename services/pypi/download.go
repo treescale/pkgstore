@@ -1,12 +1,13 @@
 package pypi
 
 import (
+	"io"
+	"log"
+
 	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"io"
-	"log"
 )
 
 func (s *Service) DownloadHandler(c *gin.Context) {

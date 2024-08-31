@@ -2,15 +2,16 @@ package pypi
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
+	"slices"
+
 	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
-	"io"
-	"log"
-	"mime/multipart"
-	"slices"
 )
 
 func (s *Service) UploadHandler(c *gin.Context) {

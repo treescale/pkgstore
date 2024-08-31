@@ -2,13 +2,14 @@ package models
 
 import (
 	"errors"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/alin-io/pkgstore/db"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
-	"regexp"
-	"strings"
-	"time"
 )
 
 var digestRegex = regexp.MustCompile(`^[a-f0-9]{64}$`)

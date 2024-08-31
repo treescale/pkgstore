@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestContainerPackageUpload(t *testing.T) {

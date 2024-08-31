@@ -1,12 +1,13 @@
 package middlewares
 
 import (
+	"strings"
+
 	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"strings"
 )
 
 func PkgNameAccessHandler(service services.PackageService) gin.HandlerFunc {

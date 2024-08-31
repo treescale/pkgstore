@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestApiPackagesList(t *testing.T) {

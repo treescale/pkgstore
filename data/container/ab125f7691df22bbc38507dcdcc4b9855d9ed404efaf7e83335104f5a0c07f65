@@ -1,0 +1,69 @@
+{
+    "created": "1970-01-01T00:00:01+00:00",
+    "architecture": "arm64",
+    "os": "linux",
+    "config": {
+        "Entrypoint": [
+            "/nix/store/n98vsmwdzc0dpkx4ki3qy2sgf5d75vbz-scripts/entrypoint.sh"
+        ],
+        "ExposedPorts": {
+            "4040": {}
+        },
+        "User": "ngrok",
+        "Env": [
+            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ]
+    },
+    "rootfs": {
+        "diff_ids": [
+            "sha256:bee1275ae7ac87065d84e2e06aec6254579ac19d9b84e325cbbe03d46e8730e7",
+            "sha256:256f2fda31ae08dc53b6ec341225fa004b82c7d672c34f3a4385402b67253af6",
+            "sha256:79230ce62bfddf6d95746336a45d49c5ad335250975ee1c44cfefa2bf16622a2",
+            "sha256:7767f2373063e7c81cf5af76c55d6998d57493751a883e8151b53561268f089b",
+            "sha256:ef8e3fa47d5ec55e00b5655462c58c15779e5e106082ded81c08777d90ed4faa",
+            "sha256:4537908155d1f23b680e913538813ed0956a3b43d0f25156a95c28f0dc7d127b",
+            "sha256:5249fb758a5d73f97405714bb5dd988b9ee3c5192d859e1d4ca82564f847f3e5",
+            "sha256:4301cb79befb3a22e680e8613dfd9f03168e1cca0753a0d9716f289d94366cf1",
+            "sha256:b76247da3745a2aa4be5daf6c13a6abfb9f107111a1324686411f87c8c1d5cce"
+        ],
+        "type": "layers"
+    },
+    "history": [
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['bee1275ae7ac87065d84e2e06aec6254579ac19d9b84e325cbbe03d46e8730e7.tar']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/n98vsmwdzc0dpkx4ki3qy2sgf5d75vbz-scripts']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/iwnf9a4l7bxri95mcf7a102zzls1vnpj-group']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/rc9nhabda3z6658lr7dv5s1b55xr3fk1-gshadow']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/x22rlwkg8sx3hwmaip0xac3z8a4d1fsf-ngrok-3.10.0']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/v7lf8bgmniidpp4cw0vjc5i9vhv7jylj-nss-cacert-aarch64-unknown-linux-gnu-3.98']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/bkjp6qllw3ngzm2amxsj8xjjnhfbhx5x-passwd']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/jg2qlb4xh2x2xc1v3xhlqwk0n4x0paz3-shadow']"
+        },
+        {
+            "created": "1970-01-01T00:00:01+00:00",
+            "comment": "store paths: ['/nix/store/kandqaxn14i7bnvhg9f17kylrxbqj27l-ngrok-customisation-layer']"
+        }
+    ]
+}

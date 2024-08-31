@@ -1,11 +1,12 @@
 package services
 
 import (
+	"log"
+
 	"github.com/alin-io/pkgstore/db"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/google/uuid"
-	"log"
 )
 
 type GarbageCollector struct {

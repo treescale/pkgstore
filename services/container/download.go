@@ -1,13 +1,15 @@
 package container
 
 import (
+	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"io"
-	"log"
-	"strings"
 )
 
 func (s *Service) DownloadHandler(c *gin.Context) {
@@ -48,14 +50,18 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 		return
 	}
 
-	defer func(fileData io.ReadCloser) {
-		err := fileData.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}(fileData)
+	defer fileData.Close()
 
-	c.DataFromReader(200, asset.Size, "application/octet-stream", fileData, map[string]string{
-		"Content-Disposition": "attachment; filename=" + digest,
-	})
+	// Set headers
+	c.Header("Content-Disposition", "attachment; filename="+digest)
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Length", fmt.Sprintf("%d", asset.Size))
+
+	// Stream the file data
+	_, err = io.Copy(c.Writer, fileData)
+	if err != nil {
+		log.Printf("Error streaming file: %v", err)
+		c.AbortWithStatus(500)
+		return
+	}
 }

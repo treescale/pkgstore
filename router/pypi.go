@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+
 	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/services/pypi"

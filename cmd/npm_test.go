@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/alin-io/pkgstore/services/npm"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/alin-io/pkgstore/services/npm"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNpmPackageUpload(t *testing.T) {

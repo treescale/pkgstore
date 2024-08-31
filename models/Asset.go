@@ -5,10 +5,11 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/alin-io/pkgstore/db"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Asset struct {

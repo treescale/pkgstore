@@ -2,12 +2,13 @@ package router
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/middlewares"
 	"github.com/alin-io/pkgstore/services/container"
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
-	"strings"
 )
 
 func initContainerRoutes(r *gin.Engine, storageBackend storage.BaseStorageBackend) {

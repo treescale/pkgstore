@@ -1,11 +1,12 @@
 package models
 
 import (
+	"log"
+	"time"
+
 	"github.com/alin-io/pkgstore/db"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"log"
-	"time"
 )
 
 type Package[MetaType any] struct {

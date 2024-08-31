@@ -6,15 +6,16 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/alin-io/pkgstore/config"
 	"github.com/alin-io/pkgstore/services/npm"
 	"github.com/alin-io/pkgstore/services/pypi"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"mime/multipart"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestPypiPackageUpload(t *testing.T) {

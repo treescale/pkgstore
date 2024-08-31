@@ -24,5 +24,6 @@ go.work
 .idea/
 .vscode/
 .env
-cmd/server/ui/
-
+cmd/server/data/
+cmd/server/packages.sqlite
+tmp/

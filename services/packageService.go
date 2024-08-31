@@ -4,16 +4,17 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/alin-io/pkgstore/config"
-	"github.com/alin-io/pkgstore/models"
-	"github.com/alin-io/pkgstore/storage"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/alin-io/pkgstore/config"
+	"github.com/alin-io/pkgstore/models"
+	"github.com/alin-io/pkgstore/storage"
+	"github.com/gin-gonic/gin"
 )
 
 type PackageService interface {

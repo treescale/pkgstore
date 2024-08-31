@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/alin-io/pkgstore/db"
 	"github.com/alin-io/pkgstore/models"
 	"github.com/alin-io/pkgstore/router"
@@ -8,9 +12,6 @@ import (
 	"github.com/alin-io/pkgstore/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 var (
