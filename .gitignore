@@ -27,3 +27,4 @@ go.work
 cmd/server/data/
 cmd/server/packages.sqlite
 tmp/
+data/

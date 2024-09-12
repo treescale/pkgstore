@@ -28,4 +28,4 @@ go.work
 .vscode/
 node_modules/
 .vite
-
+data/
