@@ -10,9 +10,9 @@ import { UserIcon } from '@heroicons/react/20/solid';
 
 const MenuItems: NavMenuProps['items'] = [
   {
-    title: 'Alin.io',
+    title: 'TreeScale',
     href: LibConfig.Routes.Home,
-    logo: true,
+    logo: '/logo.png',
   },
   {
     title: 'Packages',
@@ -20,7 +20,7 @@ const MenuItems: NavMenuProps['items'] = [
   },
   {
     title: 'Documentation',
-    href: 'https://docs.alin.io',
+    href: 'https://treescale.com/docs',
   },
 ];
 
@@ -29,7 +29,7 @@ export default function App() {
     <BrowserRouter basename={LibConfig.urlPrefix}>
       <NavMenu
         ctaItems={
-          <Link to="/">
+          <Link to="https://app.treescale.com/auth/login">
             <Button HeroIcon={UserIcon}>Sign In</Button>
           </Link>
         }
