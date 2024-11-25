@@ -67,10 +67,12 @@ func (s *Service) GetUploadProgressHandler(c *gin.Context) {
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
+		log.Println("Unable to get upload progress", err)
 		return
 	}
 	if asset.UploadUUID != uploadUUID {
 		c.JSON(404, gin.H{"error": "Upload not found"})
+		log.Println("Upload not found")
 		return
 	}
 
@@ -90,6 +92,7 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
+		log.Println("Unable to get upload progress", err)
 		return
 	}
 	if asset.UploadUUID != uploadUUID {
@@ -100,6 +103,7 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	_, chunkSize, err := s.appendStorageData(uploadUUID, c.Request.Body)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to save chunk"})
+		log.Println("Unable to save chunk metadata", err)
 		return
 	}
 
@@ -110,6 +114,7 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	err = asset.Update()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Unable to save chunk metadata"})
+		log.Println("Unable to save chunk metadata", err)
 		return
 	}
 
