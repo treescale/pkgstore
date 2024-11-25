@@ -14,7 +14,7 @@ export function PackagesEmptyState() {
       </svg>
       <h3 className="mt-2 text-sm font-semibold text-gray-900">Publish and Store private packages!</h3>
       <p className="mt-1 text-sm text-gray-500">
-        Alin.io Package Store allows to self-host package registry for NPM, Pypi and Docker Container Images
+        TreeScale Package Store allows to self-host package registry for NPM, Pypi and Docker Container Images
       </p>
       <div className="mb-16">
         <div className="my-4 flex flex-col items-center justify-center">

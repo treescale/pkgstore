@@ -40,7 +40,7 @@ export const NavMenu = ({ items, userMenu, children, ctaItems }: NavMenuProps) =
                       {typeof logoItem.logo === 'string' ? (
                         <img className="h-10 w-auto" width={144} height={40} src={logoItem.logo} alt={logoItem.title} />
                       ) : (
-                        <span className="text-2xl">Alin.io</span>
+                        <span className="text-2xl">{logoItem.title}</span>
                       )}
                     </Link>
                   </div>
