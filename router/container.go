@@ -20,7 +20,7 @@ func initContainerRoutes(r *gin.Engine, storageBackend storage.BaseStorageBacken
 			if len(authToken) > 0 {
 				c.JSON(200, gin.H{"token": strings.Split(authToken, " ")[1]})
 			} else {
-				containerService.SetAuthHeaderAndAbort(c)
+				containerService.SetAuthHeaderAndAbort(c, "Unable to get the token")
 			}
 		})
 

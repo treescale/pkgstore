@@ -26,7 +26,7 @@ type PackageService interface {
 	DownloadHandler(c *gin.Context)
 	MetadataHandler(c *gin.Context)
 
-	SetAuthHeaderAndAbort(c *gin.Context)
+	SetAuthHeaderAndAbort(c *gin.Context, message string)
 	GetPrefix() string
 
 	AbortRequestWithError(c *gin.Context, status int, message string)
@@ -124,7 +124,7 @@ func (s *BasePackageService) ProxyToPublicRegistry(c *gin.Context) {
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
 
-func (s *BasePackageService) SetAuthHeaderAndAbort(c *gin.Context) {
+func (s *BasePackageService) SetAuthHeaderAndAbort(c *gin.Context, message string) {
 	c.AbortWithStatus(401)
 }
 

@@ -66,11 +66,19 @@ func (s *Service) PkgInfoFromRequest(c *gin.Context) (pkgName string, filename s
 	return pkgName, filename
 }
 
-func (s *Service) SetAuthHeaderAndAbort(c *gin.Context) {
+func (s *Service) SetAuthHeaderAndAbort(c *gin.Context, message string) {
 	registryHost := config.Get().RegistryHosts.Container
 	registryHostUrl, err := url.Parse(registryHost)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to parse registry host"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to parse registry host",
+				},
+			},
+		})
 		c.Abort()
 		return
 	}
@@ -80,7 +88,7 @@ func (s *Service) SetAuthHeaderAndAbort(c *gin.Context) {
 			{
 				"code":    "UNAUTHORIZED",
 				"message": "authentication required",
-				"detail":  nil,
+				"detail":  message,
 			},
 		},
 	})

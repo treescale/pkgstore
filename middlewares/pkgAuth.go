@@ -28,13 +28,13 @@ func PkgNameAccessHandler(service services.PackageService) gin.HandlerFunc {
 		if len(config.Get().AuthEndpoint) > 0 {
 			tokenString, err := extractTokenHeader(c)
 			if err != nil {
-				service.SetAuthHeaderAndAbort(c)
+				service.SetAuthHeaderAndAbort(c, "Unable to get the token")
 				return
 			}
 
 			authResult, err = getRemoteAuthContext(c, pkgName, tokenString, service.GetPrefix(), pkgAction)
 			if err != nil {
-				service.SetAuthHeaderAndAbort(c)
+				service.SetAuthHeaderAndAbort(c, authResult.Error)
 				return
 			}
 
