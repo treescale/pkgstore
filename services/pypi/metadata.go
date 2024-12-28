@@ -19,13 +19,29 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	}
 	err := pkg.FillByName(pkgName)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Error while trying to get package info",
+				},
+			},
+		})
 		return
 	}
 
 	err = pkg.FillVersions()
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Error while trying to get package info",
+				},
+			},
+		})
 		return
 	}
 
@@ -49,7 +65,15 @@ func (s *Service) MetadataHandler(c *gin.Context) {
 	}
 
 	if pkg.ID == uuid.Nil || len(pkg.Versions) == 0 {
-		c.JSON(404, gin.H{"error": "Package not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Package not found",
+				},
+			},
+		})
 		return
 	}
 

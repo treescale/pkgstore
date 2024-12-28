@@ -20,7 +20,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	authCtx := middlewares.GetAuthCtx(c)
 	file, err := c.FormFile("content")
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Bad Request"})
+		c.JSON(400, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Bad Request",
+				},
+			},
+		})
 		return
 	}
 	fileHandle, err := file.Open()
@@ -38,12 +46,28 @@ func (s *Service) UploadHandler(c *gin.Context) {
 
 	checksum, size, err := s.ChecksumReader(fileHandle)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Upload Package",
+				},
+			},
+		})
 		return
 	}
 	_, err = fileHandle.Seek(0, io.SeekStart)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Upload Package",
+				},
+			},
+		})
 		return
 	}
 	storageFilename := s.PackageFilename(checksum)
@@ -61,7 +85,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		pkgVersion, err = packageModel.Version(pkgVersionName)
 		if err != nil {
 			log.Println("Unable to fill package versions: ", err)
-			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+			c.JSON(500, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable to Upload Package",
+					},
+				},
+			})
 			return
 		}
 
@@ -83,7 +115,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			err = pkgVersion.Save()
 			if err != nil {
 				log.Println("Unable to Save package versions: ", err)
-				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to Upload Package",
+						},
+					},
+				})
 				return
 			}
 
@@ -95,7 +135,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	err = s.Storage.WriteFile(storageFilename, nil, fileHandle)
 	if err != nil {
 		log.Println("Unable to write package to storage: ", err)
-		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Upload Package",
+				},
+			},
+		})
 		return
 	}
 
@@ -106,7 +154,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	err = asset.FillByDigest(checksum)
 	if err != nil {
 		log.Println("Unable to fill asset by digest: ", err)
-		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Upload Package",
+				},
+			},
+		})
 		return
 	}
 
@@ -122,7 +178,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		err = asset.Insert()
 		if err != nil {
 			log.Println("Unable to insert asset: ", err)
-			c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+			c.JSON(500, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable to Upload Package",
+					},
+				},
+			})
 			return
 		}
 	}
@@ -139,13 +203,29 @@ func (s *Service) UploadHandler(c *gin.Context) {
 			err = pkgVersion.Save()
 			if err != nil {
 				log.Println("Unable to update package version metadata: ", err)
-				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to Upload Package",
+						},
+					},
+				})
 				return
 			}
 			err = pkgVersion.AddAsset(&asset)
 			if err != nil {
 				log.Println("Unable to add asset to package version: ", err)
-				c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to Upload Package",
+						},
+					},
+				})
 				return
 			}
 		}
@@ -186,7 +266,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		if err != nil {
 			log.Println("Unable to Delete/Rollback package upload: ", err)
 		}
-		c.JSON(500, gin.H{"error": "Unable to Upload Package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Upload Package",
+				},
+			},
+		})
 		return
 	}
 	c.JSON(200, pkgVersion.Metadata.Data())

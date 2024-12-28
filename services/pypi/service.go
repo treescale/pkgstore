@@ -1,8 +1,6 @@
 package pypi
 
 import (
-	"fmt"
-
 	"github.com/treescale/pkgstore/services"
 	"github.com/treescale/pkgstore/storage"
 )
@@ -25,11 +23,4 @@ func NewService(storage storage.BaseStorageBackend) *Service {
 			PublicRegistryUrl:        "https://pypi.org",
 		},
 	}
-}
-
-func (s *Service) constructPackageOriginalFilename(name, version, postfix string) string {
-	if len(postfix) > 0 {
-		postfix = "-" + postfix
-	}
-	return fmt.Sprintf("%s-%s%s", name, version, postfix)
 }
