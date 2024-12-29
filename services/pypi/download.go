@@ -25,69 +25,29 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	}
 	err := pkg.FillByName(pkgName)
 	if err != nil {
-		c.JSON(500, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Error while trying to get package info",
-				},
-			},
-		})
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
 	}
 
 	if pkg.ID == uuid.Nil {
-		c.JSON(404, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Package not found",
-				},
-			},
-		})
+		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}
 
 	versionInfo, err = pkg.Version(version)
 	if err != nil {
-		c.JSON(500, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Error while trying to get package info",
-				},
-			},
-		})
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
 	}
 
 	if len(versionInfo.Digest) == 0 {
-		c.JSON(404, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Package not found",
-				},
-			},
-		})
+		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}
 
 	fileAssets, err := versionInfo.GetAssets()
 	if err != nil {
-		c.JSON(500, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Error while trying to get package info",
-				},
-			},
-		})
+		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
 		return
 	}
 
@@ -101,29 +61,13 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	}
 
 	if fileAsset.ID == uuid.Nil {
-		c.JSON(404, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Package not found",
-				},
-			},
-		})
+		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}
 
 	fileData, err := s.Storage.GetFile(s.PackageFilename(fileAsset.Digest))
 	if err != nil {
-		c.JSON(404, gin.H{
-			"errors": []gin.H{
-				{
-					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Package not found",
-				},
-			},
-		})
+		c.JSON(404, gin.H{"error": "Not Found"})
 		return
 	}
 

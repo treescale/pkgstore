@@ -47,11 +47,27 @@ func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[Package
 	}
 	err := pkg.FillByName(name)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Error while trying to get package info",
+				},
+			},
+		})
 		return
 	}
 	if pkg.ID == uuid.Nil {
-		c.JSON(404, gin.H{"error": "Package not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Package not found",
+				},
+			},
+		})
 		return
 	}
 	if strings.Contains(tagOrDigest, "sha256:") {
@@ -62,11 +78,27 @@ func (s *Service) pkgVersionMetadata(c *gin.Context) (pkg models.Package[Package
 		pkgVersion, err = pkg.Version(tagOrDigest)
 	}
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Error while trying to get package info",
+				},
+			},
+		})
 		return
 	}
 	if pkgVersion.ID == uuid.Nil || pkgVersion.PackageId != pkg.ID {
-		c.JSON(404, gin.H{"error": "Package version not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Package version not found",
+				},
+			},
+		})
 		return
 	}
 	return

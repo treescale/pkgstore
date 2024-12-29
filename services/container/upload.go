@@ -24,7 +24,15 @@ func (s *Service) StartLayerUploadHandler(c *gin.Context) {
 	}
 	err := asset.StartUpload()
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to Start the upload process"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to Start the upload process",
+				},
+			},
+		})
 		return
 	}
 
@@ -43,12 +51,28 @@ func (s *Service) CheckBlobExistenceHandler(c *gin.Context) {
 	}
 	err := asset.FillByDigest(digest)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to check the DB for package version",
+				},
+			},
+		})
 		return
 	}
 
 	if asset.ID == uuid.Nil {
-		c.JSON(404, gin.H{"error": "Blob not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Blob not found",
+				},
+			},
+		})
 		return
 	}
 
@@ -66,12 +90,28 @@ func (s *Service) GetUploadProgressHandler(c *gin.Context) {
 	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to get upload progress",
+				},
+			},
+		})
 		log.Println("Unable to get upload progress", err)
 		return
 	}
 	if asset.UploadUUID != uploadUUID {
-		c.JSON(404, gin.H{"error": "Upload not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Upload not found",
+				},
+			},
+		})
 		log.Println("Upload not found")
 		return
 	}
@@ -91,18 +131,42 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to get upload progress",
+				},
+			},
+		})
 		log.Println("Unable to get upload progress", err)
 		return
 	}
 	if asset.UploadUUID != uploadUUID {
-		c.JSON(404, gin.H{"error": "Upload not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Upload not found",
+				},
+			},
+		})
 		return
 	}
 
 	_, chunkSize, err := s.appendStorageData(uploadUUID, c.Request.Body)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to save chunk"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to save chunk",
+				},
+			},
+		})
 		log.Println("Unable to save chunk metadata", err)
 		return
 	}
@@ -113,7 +177,15 @@ func (s *Service) ChunkUploadHandler(c *gin.Context) {
 	}
 	err = asset.Update()
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to save chunk metadata"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to save chunk metadata",
+				},
+			},
+		})
 		log.Println("Unable to save chunk metadata", err)
 		return
 	}
@@ -135,28 +207,68 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 	err := asset.FillByUploadUUID(uploadUUID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to get upload progress"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to get upload progress",
+				},
+			},
+		})
 		return
 	}
 	if asset.UploadUUID != uploadUUID {
-		c.JSON(404, gin.H{"error": "Upload not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Upload not found",
+				},
+			},
+		})
 		return
 	}
 
 	digest, totalSize, err := s.appendStorageData(uploadUUID, c.Request.Body)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to save chunk"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to save chunk",
+				},
+			},
+		})
 		return
 	}
 
 	if inputDigest != "" && inputDigest != digest {
-		c.JSON(400, gin.H{"error": "Digest mismatch"})
+		c.JSON(400, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Digest mismatch",
+				},
+			},
+		})
 		return
 	}
 
 	err = s.Storage.CopyFile(s.PackageFilename(uploadUUID), s.PackageFilename(digest))
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to store the file"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to store the file",
+				},
+			},
+		})
 		return
 	}
 
@@ -165,7 +277,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 	}
 	err = asset2.FillByDigest(digest)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to check the DB for package version",
+				},
+			},
+		})
 		return
 	}
 	if asset2.ID == uuid.Nil || asset2.Digest != digest {
@@ -173,7 +293,15 @@ func (s *Service) UploadHandler(c *gin.Context) {
 		asset.Size = totalSize
 		err = asset.Update()
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Unable to save chunk metadata"})
+			c.JSON(500, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable to save chunk metadata",
+					},
+				},
+			})
 			return
 		}
 	}
@@ -220,13 +348,29 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		manifest := ManifestV1{}
 		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
+			c.JSON(400, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable tօ parse the manifest",
+					},
+				},
+			})
 			return
 		}
 		tagName = manifest.Tag
 		pkgName = manifest.Name
 		if len(manifest.FsLayers) == 0 {
-			c.JSON(400, gin.H{"error": "Bad Request: No layers found"})
+			c.JSON(400, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "No layers found",
+					},
+				},
+			})
 			return
 		}
 		for _, layer := range manifest.FsLayers {
@@ -236,11 +380,27 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			layerDigest := strings.Replace(layer.BlobSum, "sha256:", "", 1)
 			err = asset.FillByDigest(layerDigest)
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to check the DB for package version",
+						},
+					},
+				})
 				return
 			}
 			if asset.Digest != layerDigest {
-				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				c.JSON(404, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Uploaded asset not found",
+						},
+					},
+				})
 				return
 			}
 			versionSize += asset.Size
@@ -250,7 +410,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		manifest := ManifestV2{}
 		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
+			c.JSON(400, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable tօ parse the manifest",
+					},
+				},
+			})
 			return
 		}
 		for _, layer := range manifest.Layers {
@@ -260,11 +428,27 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			layerDigest := strings.Replace(layer.Digest, "sha256:", "", 1)
 			err = asset.FillByDigest(layerDigest)
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to check the DB for package version",
+						},
+					},
+				})
 				return
 			}
 			if asset.Digest != layerDigest {
-				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				c.JSON(404, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Uploaded asset not found",
+						},
+					},
+				})
 				return
 			}
 			versionSize += asset.Size
@@ -274,7 +458,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		manifest := ManifestListV2{}
 		err = json.Unmarshal(metadata.MetadataBuffer, &manifest)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
+			c.JSON(400, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable tօ parse the manifest",
+					},
+				},
+			})
 			return
 		}
 		for _, manifestDescriptor := range manifest.Manifests {
@@ -284,11 +476,27 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			layerDigest := strings.Replace(manifestDescriptor.Digest, "sha256:", "", 1)
 			err = asset.FillByDigest(layerDigest)
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+				c.JSON(500, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Unable to check the DB for package version",
+						},
+					},
+				})
 				return
 			}
 			if asset.Digest != layerDigest {
-				c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+				c.JSON(404, gin.H{
+					"errors": []gin.H{
+						{
+							"code":    "DENIED",
+							"message": "authentication required",
+							"detail":  "Uploaded asset not found",
+						},
+					},
+				})
 				return
 			}
 
@@ -296,12 +504,28 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 			assets = append(assets, asset)
 		}
 	default:
-		c.JSON(400, gin.H{"error": "Bad Request"})
+		c.JSON(400, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Bad Request",
+				},
+			},
+		})
 		return
 	}
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Bad Request: Unable tօ parse the manifest"})
+		c.JSON(400, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable tօ parse the manifest",
+				},
+			},
+		})
 		return
 	}
 
@@ -311,7 +535,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	}
 	err = pkg.FillByName(pkgName)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to check the DB for package"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to check the DB for package",
+				},
+			},
+		})
 		return
 	}
 
@@ -325,14 +557,30 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		err = pkg.Insert()
 		if err != nil {
 			log.Println(err)
-			c.JSON(500, gin.H{"error": "Unable to create package"})
+			c.JSON(500, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable to create package",
+					},
+				},
+			})
 			return
 		}
 	}
 
 	pkgVersion, err := pkg.Version(tagName)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to check the DB for package version",
+				},
+			},
+		})
 		return
 	}
 	if pkgVersion.ID == uuid.Nil {
@@ -353,7 +601,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		}
 	} else {
 		if pkgVersion.PackageId != pkg.ID || pkgVersion.Service != s.Prefix {
-			c.JSON(404, gin.H{"error": "Package version not found"})
+			c.JSON(404, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Package version not found",
+					},
+				},
+			})
 			return
 		}
 		pkgVersion.Version = tagName
@@ -364,7 +620,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 		err = pkgVersion.Save()
 
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Unable to insert package version"})
+			c.JSON(500, gin.H{
+				"errors": []gin.H{
+					{
+						"code":    "DENIED",
+						"message": "authentication required",
+						"detail":  "Unable to insert package version",
+					},
+				},
+			})
 			return
 		}
 
@@ -372,7 +636,15 @@ func (s *Service) ManifestUploadHandler(c *gin.Context) {
 	}
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to insert package version"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to insert package version",
+				},
+			},
+		})
 		return
 	}
 

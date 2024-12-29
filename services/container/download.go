@@ -23,11 +23,27 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	}
 	err := pkg.FillByName(name)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error while trying to get package info"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Error while trying to get package info",
+				},
+			},
+		})
 		return
 	}
 	if pkg.ID == uuid.Nil {
-		c.JSON(404, gin.H{"error": "Package not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Package not found",
+				},
+			},
+		})
 		return
 	}
 
@@ -36,17 +52,41 @@ func (s *Service) DownloadHandler(c *gin.Context) {
 	}
 	err = asset.FillByDigest(digest)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Unable to check the DB for package version"})
+		c.JSON(500, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Unable to check the DB for package version",
+				},
+			},
+		})
 		return
 	}
 	if asset.Digest != digest {
-		c.JSON(404, gin.H{"error": "Uploaded asset not found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Uploaded asset not found",
+				},
+			},
+		})
 		return
 	}
 
 	fileData, err := s.Storage.GetFile(s.PackageFilename(asset.Digest))
 	if err != nil || fileData == nil {
-		c.JSON(404, gin.H{"error": "Not Found"})
+		c.JSON(404, gin.H{
+			"errors": []gin.H{
+				{
+					"code":    "DENIED",
+					"message": "authentication required",
+					"detail":  "Not Found",
+				},
+			},
+		})
 		return
 	}
 

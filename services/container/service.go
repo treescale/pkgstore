@@ -74,8 +74,8 @@ func (s *Service) SetAuthHeaderAndAbort(c *gin.Context, message string) {
 			"errors": []gin.H{
 				{
 					"code":    "DENIED",
-					"message": "authentication required",
-					"detail":  "Unable to parse registry host",
+					"message": "Unable to parse registry host",
+					"detail":  "authentication required",
 				},
 			},
 		})
@@ -87,7 +87,7 @@ func (s *Service) SetAuthHeaderAndAbort(c *gin.Context, message string) {
 		"errors": []gin.H{
 			{
 				"code":    "UNAUTHORIZED",
-				"message": "authentication required",
+				"message": message,
 				"detail":  message,
 			},
 		},
